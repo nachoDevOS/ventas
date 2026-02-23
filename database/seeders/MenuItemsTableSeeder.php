@@ -181,54 +181,6 @@ class MenuItemsTableSeeder extends Seeder
             ),
             10 => 
             array (
-                'id' => 11,
-                'menu_id' => 1,
-                'title' => 'Categories',
-                'url' => '',
-                'target' => '_self',
-                'icon_class' => 'voyager-categories',
-                'color' => NULL,
-                'parent_id' => NULL,
-                'order' => 4,
-                'created_at' => '2024-10-18 14:28:45',
-                'updated_at' => '2025-02-10 15:42:59',
-                'route' => 'voyager.categories.index',
-                'parameters' => NULL,
-            ),
-            11 => 
-            array (
-                'id' => 12,
-                'menu_id' => 1,
-                'title' => 'Posts',
-                'url' => '',
-                'target' => '_self',
-                'icon_class' => 'voyager-news',
-                'color' => NULL,
-                'parent_id' => NULL,
-                'order' => 2,
-                'created_at' => '2024-10-18 14:28:45',
-                'updated_at' => '2024-10-18 16:40:42',
-                'route' => 'voyager.posts.index',
-                'parameters' => NULL,
-            ),
-            12 => 
-            array (
-                'id' => 13,
-                'menu_id' => 1,
-                'title' => 'Pages',
-                'url' => '',
-                'target' => '_self',
-                'icon_class' => 'voyager-file-text',
-                'color' => NULL,
-                'parent_id' => NULL,
-                'order' => 3,
-                'created_at' => '2024-10-18 14:28:46',
-                'updated_at' => '2024-10-18 16:40:42',
-                'route' => 'voyager.pages.index',
-                'parameters' => NULL,
-            ),
-            13 => 
-            array (
                 'id' => 14,
                 'menu_id' => 1,
                 'title' => 'Seguridad',
@@ -243,7 +195,7 @@ class MenuItemsTableSeeder extends Seeder
                 'route' => NULL,
                 'parameters' => '',
             ),
-            14 => 
+            11 => 
             array (
                 'id' => 15,
                 'menu_id' => 1,
@@ -259,7 +211,7 @@ class MenuItemsTableSeeder extends Seeder
                 'route' => 'clear.cache',
                 'parameters' => NULL,
             ),
-            15 => 
+            12 => 
             array (
                 'id' => 16,
                 'menu_id' => 1,
@@ -275,7 +227,7 @@ class MenuItemsTableSeeder extends Seeder
                 'route' => NULL,
                 'parameters' => '',
             ),
-            16 => 
+            13 => 
             array (
                 'id' => 18,
                 'menu_id' => 1,
