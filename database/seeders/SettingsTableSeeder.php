@@ -113,7 +113,7 @@ class SettingsTableSeeder extends Seeder
                 'key' => 'system.development',
                 'display_name' => 'Sistema en Mantenimiento 503',
                 'value' => '0',
-                'details' => NULL,
+                'details' => '{ "on": "Activo", "off": "Inactivo", "checked": true }',
                 'type' => 'checkbox',
                 'order' => 1,
                 'group' => 'System',
@@ -249,6 +249,17 @@ class SettingsTableSeeder extends Seeder
                 'type' => 'text',
                 'order' => 15,
                 'group' => 'Servidor Imagen',
+            ),
+            21 => 
+            array (
+                'id' => 25,
+                'key' => 'admin.customer',
+                'display_name' => 'Venta a Clientes',
+                'value' => '1',
+                'details' => '{ "on": "Activo", "off": "Inactivo", "checked": true }',
+                'type' => 'checkbox',
+                'order' => 16,
+                'group' => 'Admin',
             ),
         ));
         
