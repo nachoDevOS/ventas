@@ -5,6 +5,7 @@ use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AjaxController;
+use App\Http\Controllers\ItemController;
 use App\Http\Controllers\MicroServiceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\WhatsappController;
@@ -41,6 +42,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::post('people', [PersonController::class, 'store'])->name('voyager.people.store');
     Route::put('people/{id}', [PersonController::class, 'update'])->name('voyager.people.update');
     Route::get('people/{id}', [PersonController::class, 'show'])->name('voyager.people.show');
+
+
+    // Item
+    Route::get('items', [ItemController::class, 'index'])->name('voyager.items.index');
+    Route::get('items/ajax/list', [ItemController::class, 'list']);
+    Route::post('items', [ItemController::class, 'store'])->name('voyager.items.store');
+    Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
+    // Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
+    // Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);
     
     Route::get('whatsapp', [MicroServiceController::class, 'message'])->name('whatsapp.message');
 

@@ -40,4 +40,16 @@ class Item extends Model
     {
         return $this->belongsTo(Laboratory::class, 'laboratory_id')->withTrashed();
     }
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id')->withTrashed();
+    }
+    public function presentation()
+    {
+        return $this->belongsTo(Presentation::class, 'presentation_id')->withTrashed();
+    }
+    public function line()
+    {
+        return $this->belongsTo(Line::class, 'line_id')->withTrashed();
+    }
 }
