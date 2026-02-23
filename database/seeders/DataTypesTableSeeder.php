@@ -145,6 +145,42 @@ class DataTypesTableSeeder extends Seeder
                 'created_at' => '2026-02-23 10:51:28',
                 'updated_at' => '2026-02-23 10:51:28',
             ),
+            7 => 
+            array (
+                'id' => 12,
+                'name' => 'categories',
+                'slug' => 'categories',
+                'display_name_singular' => 'Categoría',
+                'display_name_plural' => 'Categorías',
+                'icon' => 'fa-solid fa-layer-group',
+                'model_name' => 'App\\Models\\Category',
+                'policy_name' => NULL,
+                'controller' => NULL,
+                'description' => NULL,
+                'generate_permissions' => 1,
+                'server_side' => 0,
+                'details' => '{"order_column":null,"order_display_column":null,"order_direction":"asc","default_search_key":null,"scope":null}',
+                'created_at' => '2026-02-23 11:06:57',
+                'updated_at' => '2026-02-23 11:07:48',
+            ),
+            8 => 
+            array (
+                'id' => 13,
+                'name' => 'items',
+                'slug' => 'items',
+                'display_name_singular' => 'Producto / Item',
+                'display_name_plural' => 'Productos / Items',
+                'icon' => 'fa-brands fa-steam-symbol',
+                'model_name' => 'App\\Models\\Item',
+                'policy_name' => NULL,
+                'controller' => NULL,
+                'description' => NULL,
+                'generate_permissions' => 1,
+                'server_side' => 0,
+                'details' => '{"order_column":null,"order_display_column":null,"order_direction":"asc","default_search_key":null,"scope":null}',
+                'created_at' => '2026-02-23 11:14:02',
+                'updated_at' => '2026-02-23 11:26:35',
+            ),
         ));
         
         
