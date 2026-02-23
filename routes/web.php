@@ -40,7 +40,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
 
     Route::resource('sales', SaleController::class);
     Route::get('sales/ajax/list', [SaleController::class, 'list']);
-    Route::get('sales/item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
+    // Route::get('sales/item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
     Route::get('sales/{id}/prinf', [SaleController::class, 'prinf'])->name('sales.prinf');
 
     Route::get('people', [PersonController::class, 'index'])->name('voyager.people.index');
@@ -56,6 +56,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::post('items', [ItemController::class, 'store'])->name('voyager.items.store');
     Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
     Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
+
+    Route::get('item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
 
     Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);//Para listar el historial de stock
     Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');

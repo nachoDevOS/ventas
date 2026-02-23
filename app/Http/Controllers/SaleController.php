@@ -28,11 +28,8 @@ class SaleController extends Controller
     public function list()
     {
         $this->custom_authorize('browse_sales');
-
         $search = request('search') ?? null;
         $paginate = request('paginate') ?? 10;
-        // $status = request('status') ?? null;
-        // $typeSale = request('typeSale') ?? null;
 
         $data = Sale::with([
             'person',
@@ -51,8 +48,6 @@ class SaleController extends Controller
                     ->OrWhereRaw($search ? "code like '%$search%'" : 1);
             })
             ->where('deleted_at', null)
-            // ->whereRaw($typeSale ? "typeSale = '$typeSale'" : 1)
-            // ->whereRaw($status ? "status = '$status'" : 1)
             ->orderBy('id', 'DESC')
             ->paginate($paginate);            
 
@@ -61,59 +56,8 @@ class SaleController extends Controller
 
     public function create()
     {
-        // $branches = Branch::where('deleted_at', null)->get();
-        $cashier = $this->cashier(null, 'user_id = "' . Auth::user()->id . '"', 'status = "Abierta"');
-        $user = Auth::user();
         $this->custom_authorize('add_sales');
-        return view('sales.edit-add', compact('cashier'));
-    }
-
-    public function edit(Sale $sale)
-    {
-        $this->custom_authorize('edit_sales');
-        $cashier = $this->cashier(null, 'user_id = "' . Auth::user()->id . '"', 'status = "Abierta"');
-
-        $sale = Sale::with([
-                'person',
-                'register',
-                'saleTransactions',
-                'saleDetails' => function ($q) {
-                    $q->where('deleted_at', null);
-                },
-                'saleDetails.itemStock'=>function($q){
-                    $q->where('deleted_at', null);
-                },
-                'saleDetails.itemStock.item.category',
-                'saleDetails.itemStock.item.presentation',
-                'saleDetails.itemStock.item.laboratory',
-                'saleDetails.itemStock.item.brand',
-                'saleDetails.itemStock.itemStockFractions'=>function($q){
-                    $q->where('deleted_at', null);
-                },
-                'saleDetails.itemStockFraction'=>function($q){
-                    $q->where('deleted_at', null);
-                },
-
-                
-            ])
-            ->where('id', $sale->id)
-            ->first();
-
-        // return $sale;
-        return view('sales.edit-add', compact('sale', 'cashier'));
-    }
-    
-    public function generarNumeroFactura($typeSale)
-    {
-        $prefix = $typeSale != 'Proforma' ? 'VTA-' : 'PRO-';
-        $fecha = now()->format('Ymd');
-        $count = Sale::withTrashed()
-            // ->where('typeSale', $typeSale)
-            ->whereRaw($typeSale != 'Proforma' ? 'typeSale != "Proforma"' : 'typeSale = "Proforma"')
-            ->whereDate('created_at', today())
-            ->count();
-
-        return $prefix . $fecha . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        return view('sales.edit-add');
     }
 
     public function store(Request $request)
@@ -289,6 +233,56 @@ class SaleController extends Controller
                 ->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
         }
     }
+
+    public function edit(Sale $sale)
+    {
+        $this->custom_authorize('edit_sales');
+        $cashier = $this->cashier(null, 'user_id = "' . Auth::user()->id . '"', 'status = "Abierta"');
+
+        $sale = Sale::with([
+                'person',
+                'register',
+                'saleTransactions',
+                'saleDetails' => function ($q) {
+                    $q->where('deleted_at', null);
+                },
+                'saleDetails.itemStock'=>function($q){
+                    $q->where('deleted_at', null);
+                },
+                'saleDetails.itemStock.item.category',
+                'saleDetails.itemStock.item.presentation',
+                'saleDetails.itemStock.item.laboratory',
+                'saleDetails.itemStock.item.brand',
+                'saleDetails.itemStock.itemStockFractions'=>function($q){
+                    $q->where('deleted_at', null);
+                },
+                'saleDetails.itemStockFraction'=>function($q){
+                    $q->where('deleted_at', null);
+                },
+
+                
+            ])
+            ->where('id', $sale->id)
+            ->first();
+
+        // return $sale;
+        return view('sales.edit-add', compact('sale', 'cashier'));
+    }
+    
+    public function generarNumeroFactura($typeSale)
+    {
+        $prefix = $typeSale != 'Proforma' ? 'VTA-' : 'PRO-';
+        $fecha = now()->format('Ymd');
+        $count = Sale::withTrashed()
+            // ->where('typeSale', $typeSale)
+            ->whereRaw($typeSale != 'Proforma' ? 'typeSale != "Proforma"' : 'typeSale = "Proforma"')
+            ->whereDate('created_at', today())
+            ->count();
+
+        return $prefix . $fecha . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    
 
     public function update(Request $request, Sale $sale)
     {

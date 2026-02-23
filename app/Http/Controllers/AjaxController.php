@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Item;
 use App\Models\ItemStock;
 use Illuminate\Http\Request;
 use App\Models\Person;
@@ -48,7 +49,7 @@ class AjaxController extends Controller
     }
 
 
-    // Para obtener el stock en tipo real
+    // Para obtener el stock en tipo real Select "Ventas"
     public function itemStockList(){
         $search = request('q');
         
@@ -105,6 +106,34 @@ class AjaxController extends Controller
             }
         }
 
+        return response()->json($data);
+    }
+
+
+    // Para Income Para buscar los Item
+    public function itemList(){
+        $search = request('q');
+        $data = Item::with(['line', 'laboratory', 'category', 'presentation', 'fractionPresentation'])
+            ->Where(function($query) use ($search){
+                if($search){
+                    $query->whereHas('line', function($query) use($search){
+                        $query->whereRaw($search ? 'name like "%'.$search.'%"' : 1);
+                    })
+                    ->OrwhereHas('category', function($query) use($search){
+                        $query->whereRaw($search ? 'name like "%'.$search.'%"' : 1);
+                    })
+                    ->OrwhereHas('laboratory', function($query) use($search){
+                        $query->whereRaw($search ? 'name like "%'.$search.'%"' : 1);
+                    })
+                    ->OrWhereRaw($search ? "id like '%$search%'" : 1)
+                    ->OrWhereRaw($search ? "nameGeneric like '%$search%'" : 1)
+                    ->OrWhereRaw($search ? "nameTrade like '%$search%'" : 1)
+                    ->OrWhereRaw($search ? "observation like '%$search%'" : 1);
+                }
+            })
+            ->where('deleted_at', null)
+            ->where('status', 1)
+            ->get();
         return response()->json($data);
     }
 }
