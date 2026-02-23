@@ -75,6 +75,24 @@ class PermissionsTableSeeder extends Seeder
         }
 
 
+        $permissions = [
+            'browse_sales' => 'Ver lista de ventas',
+            'read_sales' => 'Ver detalles de ventas',
+            'edit_sales' => 'Editar información de ventas',
+            'add_sales' => 'Agregar nuevas ventas',
+            'delete_sales' => 'Eliminar ventas',
+        ];
+
+        foreach ($permissions as $key => $description) {
+            Permission::firstOrCreate([
+                'key'        => $key,
+                'keyDescription'=> $description,
+                'table_name' => 'sales',
+                'tableDescription'=>'Ventas'
+            ]);
+        }
+
+
 
         // Parametros de Inventario
 

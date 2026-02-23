@@ -8,6 +8,7 @@ use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\MicroServiceController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\WhatsappController;
 
 /*
@@ -36,6 +37,11 @@ Route::get('/info/{id?}', [ErrorController::class , 'error'])->name('errors');
 
 Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], function () {
     Voyager::routes();
+
+    Route::resource('sales', SaleController::class);
+    Route::get('sales/ajax/list', [SaleController::class, 'list']);
+    Route::get('sales/item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
+    Route::get('sales/{id}/prinf', [SaleController::class, 'prinf'])->name('sales.prinf');
 
     Route::get('people', [PersonController::class, 'index'])->name('voyager.people.index');
     Route::get('people/ajax/list', [PersonController::class, 'list']);
