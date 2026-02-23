@@ -7,6 +7,8 @@ use App\Models\Item;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\StorageController;
+use App\Models\IncomeDetail;
+use App\Models\ItemStock;
 
 class ItemController extends Controller
 {
@@ -86,7 +88,6 @@ class ItemController extends Controller
                         })
                         ->orderBy('id', 'DESC')
                         ->paginate($paginate);
-
         return view('parameterInventories.items.list', compact('data'));
     }
 
@@ -194,6 +195,101 @@ class ItemController extends Controller
             DB::rollback();
             // Redirigir de vuelta con el error
             return redirect()->back()->with(['message' => 'Ocurrió un error: '.$th->getMessage(), 'alert-type' => 'error'])->withInput();
+        }
+    }
+
+    public function show($id)
+    {
+        $this->custom_authorize('read_items');
+
+        $item = Item::with(['laboratory', 'line'])
+            ->where('id', $id)
+            ->where('deleted_at', null)
+            ->first();
+
+        return view('parameterInventories.items.read', compact('item'));
+    }
+
+
+    // Historial de stock en el items
+    public function listStock($id)
+    {
+        $paginate = request('paginate') ?? 10;
+        $status = request('status') ?? null;
+        $search = request('search') ?? null;
+        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions'])
+            ->where('item_id', $id)
+            ->where(function($query) use ($search){
+                $query->whereRaw($search ? "lote like '%$search%'" : 1);
+            })
+            ->where('deleted_at', null)
+            ->where(function($q) use ($status){
+                if($status == '1'){
+                    $q->where('stock', '>', 0);
+                }elseif($status == '0'){
+                    $q->where('stock', '<=', 0);
+                }
+            })
+            ->orderBy('id', 'DESC')
+            ->paginate($paginate);
+
+        return view('parameterInventories.items.itemStocks.list', compact('data'));
+    }
+    public function storeStock(Request $request, $id)
+    {
+        $this->custom_authorize('add_items');    
+        $item = Item::findOrFail($id);
+
+
+        DB::beginTransaction();
+        try {
+            ItemStock::create([
+                'item_id' => $id,
+                'lote'=>$request->lote,
+                'quantity' =>  $request->quantity,
+                'stock' => $request->quantity,
+                'pricePurchase' => $request->pricePurchase,
+                'priceSale' => $request->priceSale,
+                'expirationDate'=> $request->expirationDate,
+
+                'dispensed' => $request->dispensedPrice ?'Fraccionado':'Entero',
+                'dispensedQuantity'=> $item->fractionQuantity??null,
+                'dispensedPrice' => $request->dispensedPrice??null,
+
+                'type' => 'Ingreso',
+                'observation' => $request->observation,
+            ]);
+            DB::commit();
+            return redirect()->route('voyager.items.show', ['id'=>$id])->with(['message' => 'Registrado exitosamente.', 'alert-type' => 'success']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('voyager.items.show',  ['id'=>$id])->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        } 
+    }
+
+    public function destroyStock($id, $stock)
+    {
+        $item = ItemStock::where('id', $stock)
+                ->where('deleted_at', null)
+                ->first();
+        if($item->stock != $item->quantity)
+        {
+            return redirect()->route('voyager.items.show', ['id'=>$id])->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+        DB::beginTransaction();
+        try {            
+            if($item->incomeDetail_id != null)
+            {
+                $incomeDetail = IncomeDetail::where('deleted_at', null)->where('id', $item->incomeDetail_id)->first();
+                $incomeDetail->increment('stock', $item->quantity);
+            }
+            $item->delete();
+            DB::commit();
+            return redirect()->route('voyager.items.show', ['id'=>$id])->with(['message' => 'Eliminado exitosamente.', 'alert-type' => 'success']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return redirect()->route('voyager.items.show', ['id'=>$id])->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
         }
     }
 }

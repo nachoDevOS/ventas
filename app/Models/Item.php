@@ -52,4 +52,13 @@ class Item extends Model
     {
         return $this->belongsTo(Line::class, 'line_id')->withTrashed();
     }
+    public function fractionPresentation()
+    {
+        return $this->belongsTo(Presentation::class, 'fractionPresentation_id')->withTrashed();
+    }
+
+    public function itemStocks()
+    {
+        return $this->hasMany(ItemStock::class, 'item_id')->withTrashed();
+    }
 }

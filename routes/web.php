@@ -49,8 +49,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::get('items/ajax/list', [ItemController::class, 'list']);
     Route::post('items', [ItemController::class, 'store'])->name('voyager.items.store');
     Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
-    // Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
-    // Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);
+    Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
+
+    Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);//Para listar el historial de stock
+    Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');
+    Route::delete('items/{id}/stock/{stock}', [ItemController::class, 'destroyStock'])->name('items-stock.destroy');
+
     
     Route::get('whatsapp', [MicroServiceController::class, 'message'])->name('whatsapp.message');
 
