@@ -32,7 +32,7 @@
             @if (isset($sale))
                 @method('PUT')
             @endif
-            <div class="row">
+            <div class="row row-layout">
                 {{-- @if (!$globalFuntion_cashierMoney['cashier'])
                     <div class="col-md-12 col-sm-12">
                         <div class="panel panel-bordered alert alert-warning">
@@ -41,10 +41,12 @@
                         </div>
                     </div>
                 @endif --}}
-                <div class="col-md-12">
+                <div class="col-md-3 payment-col">
                     <style>
                         /* ── Payment panel ── */
-                        .payment-panel-container .form-group { margin-bottom: 14px; }
+                        .payment-panel-container .form-group { margin-bottom: 10px; }
+                        .payment-col { position: -webkit-sticky; position: sticky; top: 15px; align-self: flex-start; }
+                        .row-layout { display: flex; align-items: flex-start; flex-wrap: wrap; }
 
                         /* Method cards */
                         .payment-method-group { display: flex; gap: 10px; margin-top: 6px; }
@@ -250,7 +252,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-9">
                     <div class="panel panel-bordered">
                         <div class="panel-heading">
                             <h3 class="panel-title"><i class="fa-solid fa-pills"></i> PRODUCTOS</h3>
@@ -260,7 +262,7 @@
                                 <label for="product_id">Buscar producto</label>
                                 <select class="form-control" id="select-product_id"></select>
                             </div>
-                            <div class="col-md-12" style="height: 800px; max-height: 400px; overflow-y: auto">
+                            <div class="col-md-12" style="max-height: 65vh; overflow-y: auto">
                                 <div class="table-responsive">
                                     <table id="dataTable" class="table table-bordered table-hover">
                                         <thead>
