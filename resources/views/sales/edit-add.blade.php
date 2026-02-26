@@ -277,7 +277,7 @@
                                         </thead>
                                         <tbody id="table-body">
                                             <tr id="tr-empty" @if(isset($sale) && count($sale->saleDetails) > 0) style="display: none" @endif>
-                                                <td colspan="5" style="height: 320px">
+                                                <td colspan="6" style="height: 320px">
                                                     <h4 class="text-center text-muted" style="margin-top: 50px">
                                                         <i class="glyphicon glyphicon-shopping-cart"
                                                             style="font-size: 50px"></i> <br><br>
