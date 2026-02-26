@@ -273,12 +273,11 @@
                                                 <th style="text-align: center; width:8%">Cantidad</th>
                                                 <th style="text-align: center; width:12%">Descuento</th>
                                                 <th style="text-align: center; width:15%">Subtotal</th>
-                                                <th style="width: 1%"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-body">
                                             <tr id="tr-empty" @if(isset($sale) && count($sale->saleDetails) > 0) style="display: none" @endif>
-                                                <td colspan="6" style="height: 320px">
+                                                <td colspan="5" style="height: 320px">
                                                     <h4 class="text-center text-muted" style="margin-top: 50px">
                                                         <i class="glyphicon glyphicon-shopping-cart"
                                                             style="font-size: 50px"></i> <br><br>
@@ -552,20 +551,29 @@
                             <input type="hidden" name="products[${product.id}][item_stock_id]" value="${product.id}"/>
                             <input type="hidden" name="products[${product.id}][id]" value="${product.id}"/>
                             <input type="hidden" name="products[${product.id}][detail_id]" value="0"/>
-                            <div style="line-height: 1.3;">
-                                <div style="font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 3px;">
-                                    <i class="fa-solid fa-pills" style="color: #3498db;"></i> ${product.item.nameGeneric} ${product.item.nameTrade ? `<span style="color: #7f8c8d; font-weight: normal;">| ${product.item.nameTrade}</span>` : ''}
-                                </div>
-                                <div style="font-size: 11px; color: #555;">
-                                    <div style="display: flex; flex-wrap: wrap; gap: 2px 12px; margin-bottom: 3px;">
-                                        <div><i class="fa-solid fa-tags" style="color: #2ecc71; width: 12px;"></i> ${product.item.category.name}</div>
-                                        <div><i class="fa-solid fa-flask" style="color: #3498db; width: 12px;"></i> ${product.item.laboratory ? product.item.laboratory.name : 'SN'}</div>
-                                        <div><i class="fa-solid fa-copyright" style="color: #9b59b6; width: 12px;"></i> ${product.item.line ? product.item.line.name : 'SN'}</div>
-                                        ${contentInfo}
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 4px;">
+                                <div style="line-height: 1.3; flex: 1; min-width: 0;">
+                                    <div style="font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 3px;">
+                                        <i class="fa-solid fa-pills" style="color: #3498db;"></i> ${product.item.nameGeneric} ${product.item.nameTrade ? `<span style="color: #7f8c8d; font-weight: normal;">| ${product.item.nameTrade}</span>` : ''}
                                     </div>
-                                    ${observationInfo}
-                                    <div id="stock-label-${product.id}" style="margin-top: 3px;">${stockInfo}</div>
+                                    <div style="font-size: 11px; color: #555;">
+                                        <div style="display: flex; flex-wrap: wrap; gap: 2px 12px; margin-bottom: 3px;">
+                                            <div><i class="fa-solid fa-tags" style="color: #2ecc71; width: 12px;"></i> ${product.item.category.name}</div>
+                                            <div><i class="fa-solid fa-flask" style="color: #3498db; width: 12px;"></i> ${product.item.laboratory ? product.item.laboratory.name : 'SN'}</div>
+                                            <div><i class="fa-solid fa-copyright" style="color: #9b59b6; width: 12px;"></i> ${product.item.line ? product.item.line.name : 'SN'}</div>
+                                            ${contentInfo}
+                                        </div>
+                                        ${observationInfo}
+                                        <div id="stock-label-${product.id}" style="margin-top: 3px;">${stockInfo}</div>
+                                    </div>
                                 </div>
+                                <button type="button" onclick="removeTr(${product.id})"
+                                        title="Eliminar producto"
+                                        style="flex-shrink: 0; border: none; background: none; padding: 2px 4px; cursor: pointer; color: #c0392b; opacity: .6; line-height: 1; border-radius: 4px; transition: opacity .15s, background .15s;"
+                                        onmouseover="this.style.opacity='1';this.style.background='#fdf2f2';"
+                                        onmouseout="this.style.opacity='.6';this.style.background='none';">
+                                    <i class="voyager-trash" style="font-size: 15px;"></i>
+                                </button>
                             </div>
                         </td>
                         <td style="vertical-align: middle; padding: 4px;">
@@ -628,9 +636,6 @@
                                 </div>
                             </div>` : '' }
                             <input type="hidden" class="label-subtotal" id="label-subtotal-${product.id}" value="0.00" />
-                        </td>
-                        <td style="width: 5%">
-                            <button type="button" onclick="removeTr(${product.id})" class="btn btn-link"><i class="voyager-trash text-danger"></i></button>
                         </td>
                     </tr>
                 `;
