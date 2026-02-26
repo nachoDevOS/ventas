@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan migrate)"
+      "Bash(php artisan migrate)",
+      "Bash(php -l app/Http/Controllers/SaleController.php)",
+      "Bash(php -l app/Http/Controllers/Controller.php)"
     ]
   }
 }

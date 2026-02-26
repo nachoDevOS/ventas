@@ -90,5 +90,40 @@ class Controller extends BaseController
         // =================================================================================
     }
 
+    // Para eliminacion y actualizacion o editar
+    public function destroyDispensation($dispensions)
+    {
+        foreach ($dispensions as $detail) {
+            $itemStock = ItemStock::findOrFail($detail->itemStock_id);
+
+            if ($detail->dispensed == 'Entero') {
+                $itemStock->increment('stock', $detail->quantity);
+                $detail->delete();
+            } 
+            elseif ($detail->dispensed == 'Fraccionado' && $detail->itemStockFraction) {
+                // Si es fracción, eliminamos el registro de fracción (soft delete)
+                $detail->itemStockFraction->delete();
+
+                $itemStockUnit = SaleDetail::with(['sale'])
+                    ->whereHas('sale', function ($q) {
+                        $q->where('deleted_at', null);
+                    })
+                    ->where('itemStock_id',$detail->itemStock_id)
+                    ->where('dispensed','Entero')
+                    ->where('deleted_at', null)
+                    ->get()
+                    ->sum('quantity');
+               
+
+
+                $itemStock->update([
+                    'stock' => $itemStock->quantity
+                ]);
+                $itemStock->decrement('stock', ($itemStockUnit));
+                $detail->delete();   
+            }
+        }
+    }
+
     
 }

@@ -122,6 +122,7 @@ class SaleController extends Controller
         //         ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
         // }
 
+        
         DB::beginTransaction();
         try {
             $transaction = Transaction::create([
@@ -130,7 +131,6 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'person_id' => $request->person_id,
                 // 'cashier_id' => $cashier->id,
-
                 'code' => $this->generarNumeroFactura($request->typeSale),
                 'typeSale' => $request->typeSale,
                 'amountReceived' => $request->amountReceived,
@@ -262,7 +262,8 @@ class SaleController extends Controller
     public function edit(Sale $sale)
     {
         $this->custom_authorize('edit_sales');
-        $cashier = $this->cashier(null, 'user_id = "' . Auth::user()->id . '"', 'status = "Abierta"');
+        // $cashier = $this->cashier(null, 'user_id = "' . Auth::user()->id . '"', 'status = "Abierta"');
+        $cashier=null;
 
         $sale = Sale::with([
                 'person',
@@ -277,7 +278,7 @@ class SaleController extends Controller
                 'saleDetails.itemStock.item.category',
                 'saleDetails.itemStock.item.presentation',
                 'saleDetails.itemStock.item.laboratory',
-                'saleDetails.itemStock.item.brand',
+                'saleDetails.itemStock.item.line',
                 'saleDetails.itemStock.itemStockFractions'=>function($q){
                     $q->where('deleted_at', null);
                 },
@@ -364,17 +365,17 @@ class SaleController extends Controller
                 ->with(['message' => 'Monto Incorrecto.', 'alert-type' => 'error']);
         }
 
-        $cashier = $this->cashier(null,'user_id = "'.Auth::user()->id.'"', 'status = "Abierta"');
-        if (!$cashier) {
-            return redirect()
-                ->route('sales.index')
-                ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
-        }
-        if($cashier->id != $sale->cashier_id){
-            return redirect()
-                ->route('sales.index')
-                ->with(['message' => 'No puede modificar ventas de otra caja.', 'alert-type' => 'warning']);
-        }
+        // $cashier = $this->cashier(null,'user_id = "'.Auth::user()->id.'"', 'status = "Abierta"');
+        // if (!$cashier) {
+        //     return redirect()
+        //         ->route('sales.index')
+        //         ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
+        // }
+        // if($cashier->id != $sale->cashier_id){
+        //     return redirect()
+        //         ->route('sales.index')
+        //         ->with(['message' => 'No puede modificar ventas de otra caja.', 'alert-type' => 'warning']);
+        // }
        
         DB::beginTransaction();
         try {
