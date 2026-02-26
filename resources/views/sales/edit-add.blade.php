@@ -43,60 +43,62 @@
                 @endif --}}
                 <div class="col-md-12">
                     <style>
-                        .payment-panel-container .form-group {
-                            margin-bottom: 20px;
+                        /* ── Payment panel ── */
+                        .payment-panel-container .form-group { margin-bottom: 14px; }
+
+                        /* Method cards */
+                        .payment-method-group { display: flex; gap: 10px; margin-top: 6px; }
+                        .payment-method-card {
+                            flex: 1; border: 2px solid #ddd; border-radius: 8px;
+                            padding: 12px 6px; text-align: center; cursor: pointer;
+                            transition: border-color .15s, background .15s, box-shadow .15s;
+                            background: #fff;
                         }
+                        .payment-method-card:hover { border-color: #3498db; background: #f0f7ff; }
+                        .payment-method-card.active {
+                            border-color: #3498db; background: #eaf4fd;
+                            box-shadow: 0 2px 8px rgba(52,152,219,.18);
+                        }
+                        .pm-icon { font-size: 20px; color: #bdc3c7; margin-bottom: 5px; display: block; transition: color .15s; }
+                        .pm-label { font-size: 11px; color: #7f8c8d; font-weight: 600; transition: color .15s; }
+                        .payment-method-card.active .pm-icon  { color: #3498db; }
+                        .payment-method-card.active .pm-label { color: #2980b9; font-weight: 700; }
+
+                        /* Amount inputs row */
+                        .amounts-row { display: flex; gap: 12px; margin-bottom: 12px; }
+                        .amount-block { flex: 1; }
+                        .amount-block label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; display: block; }
+                        .amount-block .input-group-addon { border-right: 0; font-weight: bold; }
+
+                        /* Total summary */
                         .payment-summary {
-                            background-color: #f9f9f9;
-                            border: 1px solid #eee;
-                            border-radius: 8px;
-                            padding: 15px;
-                            margin-top: 15px;
+                            background: linear-gradient(135deg, #f8fffe 0%, #eafaf4 100%);
+                            border: 1px solid #c9f0dc; border-radius: 10px;
+                            padding: 14px 18px; margin-bottom: 10px;
+                            display: flex; justify-content: space-between; align-items: center;
                         }
-                        .payment-summary ul {
-                            list-style: none;
-                            padding: 0;
-                            margin: 0;
+                        .payment-summary .total-label { font-size: 13px; font-weight: 600; color: #555; }
+                        .payment-summary .total-label i { color: #27ae60; margin-right: 5px; }
+                        .payment-summary .total-value { font-size: 2em; font-weight: 800; color: #27ae60; line-height: 1; }
+                        .payment-summary .total-value small { font-size: .45em; color: #7f8c8d; font-weight: 400; margin-right: 3px; vertical-align: middle; }
+
+                        /* Change / Debt / Error messages */
+                        .change-display, .payment-error {
+                            display: flex; justify-content: space-between; align-items: center;
+                            border-radius: 8px; padding: 9px 14px;
+                            font-weight: 700; margin-top: 8px; font-size: .95em;
                         }
-                        .payment-summary li {
-                            display: flex;
-                            justify-content: space-between;
-                            padding: 8px 0;
-                            border-bottom: 1px solid #eee;
-                            font-size: 1.1em;
+                        .change-display { background: #eaf4fd; border: 1px solid #aed6f1; color: #2980b9; }
+                        #change-message-credito { background: #fef9e7; border-color: #f9e79f; color: #b7950b; }
+                        .change-display b, #change-message-credito b { font-size: 1.25em; }
+                        .payment-error { background: #fdf2f0; border: 1px solid #f5c6cb; color: #c0392b; }
+
+                        /* Confirm box */
+                        .confirm-check-box {
+                            background: #f8f9fa; border: 1px solid #e9ecef;
+                            border-radius: 8px; padding: 11px 15px; margin-bottom: 12px;
                         }
-                        .payment-summary li:last-child {
-                            border-bottom: none;
-                        }
-                        .payment-summary .total-pay-li {
-                            font-size: 1.4em;
-                            font-weight: bold;
-                            color: #333;
-                            padding-top: 12px;
-                            border-top: 2px solid #ddd;
-                            margin-top: 10px;
-                        }
-                        .payment-summary .total-pay-li .value {
-                            color: #27ae60;
-                        }
-                        .change-display {
-                            font-size: 1.3em;
-                            font-weight: bold;
-                            color: #3498db;
-                            text-align: right;
-                            margin-top: 10px;
-                        }
-                        .payment-error {
-                            font-size: 1em;
-                            font-weight: bold;
-                            color: #e74c3c;
-                            text-align: right;
-                            margin-top: 10px;
-                        }
-                        .input-group-addon {
-                            background-color: #ecf0f1;
-                            border-right: 0;
-                        }
+                        .confirm-check-box .checkbox-inline { font-size: 13px; color: #555; font-weight: 600; }
                     </style>
                     <div class="panel panel-bordered">
                         <div class="panel-heading">
@@ -104,69 +106,114 @@
                         </div>
                         <div class="panel-body payment-panel-container" style="padding: 15px;">
                             <div class="row">
-                                @if (setting('admin.customer'))  
+                                @if (setting('admin.customer'))
                                     <div class="form-group col-md-12">
-                                        <label for="person_id">Cliente</label>
+                                        <label for="person_id"><i class="fa-solid fa-user" style="color:#3498db;"></i> Cliente</label>
                                         <div class="input-group">
                                             <select name="person_id" id="select-person_id" class="form-control" @if(isset($sale) && $sale->person_id) data-id="{{$sale->person_id}}" data-text="{{$sale->person->first_name}} {{$sale->person->paternal_surname}}" @endif></select>
                                             <span class="input-group-btn">
-                                                <button id="trash-person" class="btn btn-default" title="Quitar Cliente" style="margin: 0px" type="button"><i class="voyager-trash"></i></button>
-                                                <button class="btn btn-primary" title="Nuevo cliente" data-target="#modal-create-person" data-toggle="modal" style="margin: 0px" type="button"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                                                <button id="trash-person" class="btn btn-default" title="Quitar Cliente" style="margin:0" type="button"><i class="voyager-trash"></i></button>
+                                                <button class="btn btn-primary" title="Nuevo cliente" data-target="#modal-create-person" data-toggle="modal" style="margin:0" type="button"><span class="glyphicon glyphicon-plus"></span></button>
                                             </span>
                                         </div>
                                     </div>
                                 @endif
 
                                 <input type="hidden" name="typeSale" id="typeSale" value="{{ isset($sale) ? $sale->typeSale : 'Venta al Contado' }}">
-                                
+
+                                {{-- Hidden select keeps form submission & JS compatibility --}}
+                                <select name="payment_type" id="select-payment_type" style="display:none;">
+                                    <option value=""></option>
+                                    <option value="Efectivo" @if(isset($sale) && $sale->payment_type == 'Efectivo') selected @endif>Efectivo</option>
+                                    <option value="Qr" @if(isset($sale) && $sale->payment_type == 'Qr') selected @endif>Qr</option>
+                                    <option value="Efectivo y Qr" @if(isset($sale) && ($sale->payment_type == 'Efectivo y Qr' || $sale->payment_type == 'Ambos')) selected @endif>Efectivo y Qr</option>
+                                </select>
+
                                 <div class="form-group col-md-12">
-                                    <label for="payment_type">Método de pago</label>
-                                    <select name="payment_type" id="select-payment_type" class="form-control select2" required>
-                                        <option value="" disabled selected>--Seleccione una opción--</option>
-                                        <option value="Efectivo" @if(isset($sale) && $sale->payment_type == 'Efectivo') selected @endif>Efectivo</option>
-                                        <option value="Qr" @if(isset($sale) && $sale->payment_type == 'Qr') selected @endif>Qr/Transferencia</option>                                    
-                                        <option value="Efectivo y Qr" @if(isset($sale) && ($sale->payment_type == 'Efectivo y Qr' || $sale->payment_type == 'Ambos')) selected @endif>Efectivo y Qr</option>
-                                    </select>
-                                </div>
-                                <div id="cash-payment-section" class="form-group col-md-12" style="display: none;">
-                                    <label for="amount_cash">Monto en Efectivo</label>
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa-solid fa-money-bill-wave"></i></span>
-                                        <input type="number" name="amount_cash" id="amount_cash" class="form-control" value="{{ isset($sale) ? $sale->amount_cash : 0 }}" step="0.01" style="text-align: right" placeholder="0.00">
+                                    <label><i class="fa-solid fa-credit-card" style="color:#3498db;"></i> Método de pago</label>
+                                    <div class="payment-method-group">
+                                        <div class="payment-method-card @if(isset($sale) && $sale->payment_type == 'Efectivo') active @endif"
+                                             data-value="Efectivo" onclick="selectPaymentMethod('Efectivo', this)">
+                                            <i class="fa-solid fa-money-bill-wave pm-icon"></i>
+                                            <span class="pm-label">Efectivo</span>
+                                        </div>
+                                        <div class="payment-method-card @if(isset($sale) && $sale->payment_type == 'Qr') active @endif"
+                                             data-value="Qr" onclick="selectPaymentMethod('Qr', this)">
+                                            <i class="fa-solid fa-qrcode pm-icon"></i>
+                                            <span class="pm-label">QR / Transfer.</span>
+                                        </div>
+                                        <div class="payment-method-card @if(isset($sale) && ($sale->payment_type == 'Efectivo y Qr' || $sale->payment_type == 'Ambos')) active @endif"
+                                             data-value="Efectivo y Qr" onclick="selectPaymentMethod('Efectivo y Qr', this)">
+                                            <i class="fa-solid fa-layer-group pm-icon"></i>
+                                            <span class="pm-label">Efectivo y QR</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div id="qr-payment-section" class="form-group col-md-12" style="display: none;">
-                                    <label for="amount_qr">Monto en Qr/Transferencia</label>
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa-solid fa-qrcode"></i></span>
-                                        <input type="number" name="amount_qr" id="amount_qr" class="form-control" value="{{ isset($sale) ? $sale->amount_qr : 0 }}" step="0.01" style="text-align: right" placeholder="0.00">
+
+                                <div class="col-md-12">
+                                    <div class="amounts-row">
+                                        <div id="cash-payment-section" class="amount-block" style="display:none;">
+                                            <label><i class="fa-solid fa-money-bill-wave" style="color:#27ae60;"></i> Efectivo</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon" style="background:#eafaf1;color:#27ae60;border-color:#c9f0dc;">Bs.</span>
+                                                <input type="number" name="amount_cash" id="amount_cash" class="form-control"
+                                                       value="{{ isset($sale) ? $sale->amount_cash : 0 }}" step="0.01"
+                                                       style="text-align:right;font-size:15px;font-weight:600;border-color:#c9f0dc;" placeholder="0.00">
+                                            </div>
+                                        </div>
+                                        <div id="qr-payment-section" class="amount-block" style="display:none;">
+                                            <label><i class="fa-solid fa-qrcode" style="color:#8e44ad;"></i> QR / Transferencia</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon" style="background:#f5eef8;color:#8e44ad;border-color:#d7bde2;">Bs.</span>
+                                                <input type="number" name="amount_qr" id="amount_qr" class="form-control"
+                                                       value="{{ isset($sale) ? $sale->amount_qr : 0 }}" step="0.01"
+                                                       style="text-align:right;font-size:15px;font-weight:600;border-color:#d7bde2;" placeholder="0.00">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-12">
                                     <div class="payment-summary">
-                                        <ul>
-                                            <li class="total-pay-li"><span>Total a Pagar:</span> <span class="value">Bs. <b id="label-total">0.00</b></span></li>
-                                        </ul>
+                                        <span class="total-label"><i class="fa-solid fa-receipt"></i> Total a Pagar</span>
+                                        <span class="total-value"><small>Bs.</small><b id="label-total">0.00</b></span>
                                     </div>
-                                    <div id="change-message-error" class="payment-error" style="display: none;"><small>Error en el monto</small></div>
-                                    <div id="change-message-error-credito" class="payment-error" style="display: none;"><small>Monto excede la deuda</small></div>
-                                    <div id="change-message" class="change-display" style="display: none;">Cambio: Bs. <b id="change-amount">0.00</b></div>
-                                    <div id="change-message-credito" class="change-display" style="display: none;">Deuda Pendiente: Bs. <b id="change-amount-credito">0.00</b></div>
-
+                                    <div id="change-message-error" class="payment-error" style="display:none;">
+                                        <span><i class="fa-solid fa-circle-exclamation"></i> Error en el monto</span>
+                                    </div>
+                                    <div id="change-message-error-credito" class="payment-error" style="display:none;">
+                                        <span><i class="fa-solid fa-circle-exclamation"></i> Monto excede la deuda</span>
+                                    </div>
+                                    <div id="change-message" class="change-display" style="display:none;">
+                                        <span><i class="fa-solid fa-coins"></i> Cambio</span>
+                                        <span>Bs. <b id="change-amount">0.00</b></span>
+                                    </div>
+                                    <div id="change-message-credito" class="change-display" style="display:none;">
+                                        <span><i class="fa-solid fa-clock"></i> Deuda Pendiente</span>
+                                        <span>Bs. <b id="change-amount-credito">0.00</b></span>
+                                    </div>
                                     <input type="hidden" name="amountReceived" id="amountReceived" value="0">
                                     <input type="hidden" id="amountTotalSale" name="amountTotalSale" value="0">
                                 </div>
 
-                                <div class="form-group col-md-12" style="margin-top: 20px;">
-                                    <label class="checkbox-inline"><input type="checkbox" required> Confirmar y finalizar registro</label>
+                                <div class="col-md-12" style="margin-top:10px;">
+                                    <div class="confirm-check-box">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" required>
+                                            <i class="fa-solid fa-circle-check" style="color:#27ae60;"></i>
+                                            Confirmar y finalizar registro
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div class="form-group col-md-12 text-center">
-                                    <button type="submit" class="btn btn-primary btn-block save btn-submit" disabled>
-                                        <i class="voyager-basket"></i> {{ isset($sale) ? 'Actualizar' : 'Registrar' }}
+                                    <button type="submit" class="btn btn-success btn-block btn-submit" disabled
+                                            style="font-size:15px;font-weight:600;border-radius:6px;padding:10px;">
+                                        <i class="voyager-basket"></i> {{ isset($sale) ? 'Actualizar Venta' : 'Registrar Venta' }}
                                     </button>
-                                    <a href="{{ route('sales.index') }}" class="btn btn-link" style="margin-top:10px;">Cancelar y Volver</a>
+                                    <a href="{{ route('sales.index') }}" class="btn btn-link" style="margin-top:8px;font-size:13px;">
+                                        <i class="fa-solid fa-arrow-left"></i> Cancelar y Volver
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -1004,6 +1051,13 @@
             $('#select-person_id').val('').trigger('change');
             toastr.success('Cliente eliminado', 'Eliminado');
         });
+
+        // Seleccionar método de pago desde las tarjetas visuales
+        function selectPaymentMethod(value, card) {
+            $('.payment-method-card').removeClass('active');
+            $(card).addClass('active');
+            $('#select-payment_type').val(value).trigger('change');
+        }
 
         // =================================================================
         // ====================== NEW PAYMENT LOGIC ========================

@@ -112,3 +112,29 @@ Adaptar el diseño de las columnas Precio, Descuento y Subtotal al estilo nativo
 - El descuento se almacena por `SaleDetail` (por línea de detalle), no a nivel de `Sale`.
 - El campo `amount` en `sale_details` ahora representa el valor **neto** (ya con descuento).
 - El campo `discount` en `sale_details` guarda el monto absoluto descontado en Bs.
+
+---
+
+## [2026-02-26] Rediseño panel de Método de Pago
+
+### Cambios en `resources/views/sales/edit-add.blade.php`
+
+**Método de pago — tarjetas visuales:**
+- Se reemplazó el `<select>` visible por 3 tarjetas clickeables (Efectivo, QR/Transferencia, Efectivo y QR).
+- El `<select#select-payment_type>` queda oculto (`display:none`) para mantener compatibilidad con el JS existente y el envío del formulario.
+- Nueva función JS `selectPaymentMethod(value, card)` que sincroniza la tarjeta activa con el select y dispara `updatePaymentLogic()`.
+
+**Inputs de montos — disposición flex:**
+- Los campos `#cash-payment-section` y `#qr-payment-section` están en un contenedor flex (`.amounts-row`).
+- Cuando solo uno es visible ocupa todo el ancho; cuando ambos son visibles se dividen en 50/50 automáticamente.
+- Verde para Efectivo, violeta para QR.
+
+**Total a Pagar:**
+- Rediseñado con gradiente verde suave, fuente `2em` bold, separación label/valor con flexbox.
+
+**Mensajes de Cambio / Deuda / Error:**
+- Cada mensaje es un bloque flex con icono + texto a la izquierda y monto a la derecha.
+- Cambio: fondo azul claro | Deuda: fondo amarillo | Error: fondo rojo suave.
+
+**Checkbox de confirmación:** caja gris con border-radius.
+**Botón Registrar/Actualizar:** `btn-success` (verde), tamaño `15px`, border-radius `6px`.
