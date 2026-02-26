@@ -45,7 +45,8 @@
                     <style>
                         /* ── Payment panel ── */
                         .payment-panel-container .form-group { margin-bottom: 10px; }
-                        .payment-col { position: -webkit-sticky; position: sticky; top: 15px; align-self: flex-start; }
+                        .payment-col { position: -webkit-sticky; position: sticky; top: 15px; align-self: flex-start; order: 2; }
+                        .products-col { order: 1; }
                         .row-layout { display: flex; align-items: flex-start; flex-wrap: wrap; }
 
                         /* Method cards */
@@ -252,7 +253,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-9 products-col">
                     <div class="panel panel-bordered">
                         <div class="panel-heading">
                             <h3 class="panel-title"><i class="fa-solid fa-pills"></i> PRODUCTOS</h3>
