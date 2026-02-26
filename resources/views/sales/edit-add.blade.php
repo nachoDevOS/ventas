@@ -41,51 +41,7 @@
                         </div>
                     </div>
                 @endif --}}
-                <div class="col-md-8">
-                    <div class="panel panel-bordered">
-                        <div class="panel-heading">
-                            <h3 class="panel-title"><i class="fa-solid fa-pills"></i> PRODUCTOS</h3>
-                        </div>
-                        <div class="panel-body">
-                            <div class="form-group col-md-12">
-                                <label for="product_id">Buscar producto</label>
-                                <select class="form-control" id="select-product_id"></select>
-                            </div>
-                            <div class="col-md-12" style="height: 800px; max-height: 400px; overflow-y: auto">
-                                <div class="table-responsive">
-                                    <table id="dataTable" class="table table-bordered table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 5%">N&deg;</th>
-                                                <th style="">Detalles</th>
-                                                <th style="text-align: center; width:12%">Precio</th>
-                                                <th style="text-align: center; width:12%">Cantidad</th>
-                                                <th style="text-align: center; width:10%">Subtotal</th>
-                                                <th style="width: 5%"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="table-body">
-                                            <tr id="tr-empty" @if(isset($sale) && count($sale->saleDetails) > 0) style="display: none" @endif>
-                                                <td colspan="6" style="height: 320px">
-                                                    <h4 class="text-center text-muted" style="margin-top: 50px">
-                                                        <i class="glyphicon glyphicon-shopping-cart"
-                                                            style="font-size: 50px"></i> <br><br>
-                                                        Lista de venta vacía
-                                                    </h4>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="form-group col-md-12">
-                                <label for="observation">Observaciones</label>
-                                <textarea name="observation" class="form-control" rows="2" placeholder="Observaciones">{{ isset($sale) ? $sale->observation : '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-12">
                     <style>
                         .payment-panel-container .form-group {
                             margin-bottom: 20px;
@@ -216,6 +172,50 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-12">
+                    <div class="panel panel-bordered">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><i class="fa-solid fa-pills"></i> PRODUCTOS</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group col-md-12">
+                                <label for="product_id">Buscar producto</label>
+                                <select class="form-control" id="select-product_id"></select>
+                            </div>
+                            <div class="col-md-12" style="height: 800px; max-height: 400px; overflow-y: auto">
+                                <div class="table-responsive">
+                                    <table id="dataTable" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 5%">N&deg;</th>
+                                                <th style="">Detalles</th>
+                                                <th style="text-align: center; width:8%">Precio</th>
+                                                <th style="text-align: center; width:8%">Cantidad</th>
+                                                <th style="text-align: center; width:12%">Subtotal</th>
+                                                <th style="width: 1%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-body">
+                                            <tr id="tr-empty" @if(isset($sale) && count($sale->saleDetails) > 0) style="display: none" @endif>
+                                                <td colspan="6" style="height: 320px">
+                                                    <h4 class="text-center text-muted" style="margin-top: 50px">
+                                                        <i class="glyphicon glyphicon-shopping-cart"
+                                                            style="font-size: 50px"></i> <br><br>
+                                                        Lista de venta vacía
+                                                    </h4>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="observation">Observaciones</label>
+                                <textarea name="observation" class="form-control" rows="2" placeholder="Observaciones">{{ isset($sale) ? $sale->observation : '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
@@ -294,6 +294,8 @@
 
 @section('javascript')
     <script src="{{ asset('js/btn-submit.js') }}"></script>
+    <script src="{{ asset('js/input-numberBlock.js') }}"></script>
+
     <script src="{{ asset('js/include/person-select.js') }}"></script>
     <script src="{{ asset('js/include/person-register.js') }}"></script>
 
@@ -466,7 +468,16 @@
                             ${quantityInputs}
                         </td>
                         <td class="text-right" style="vertical-align: middle;">
-                            <b class="label-subtotal" id="label-subtotal-${product.id}" style="font-size: 1.2em;">0.00</b>
+                            <div id="subtotal-unit-container-${product.id}" style="margin-bottom: 15px;">
+                                <small>Subtotal (${product.item.presentation.name})</small><br>
+                                <b id="label-subtotal-unit-${product.id}" style="font-size: 1.1em;">0.00</b>
+                            </div>
+                            ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? `
+                            <div id="subtotal-fraction-container-${product.id}">
+                                <small>Subtotal (${product.item.fraction_presentation.name})</small><br>
+                                <b id="label-subtotal-fraction-${product.id}" style="font-size: 1.1em;">0.00</b>
+                            </div>` : '' }
+                            <input type="hidden" class="label-subtotal" id="label-subtotal-${product.id}" value="0.00" />
                         </td>
                         <td style="width: 5%">
                             <button type="button" onclick="removeTr(${product.id})" class="btn btn-link"><i class="voyager-trash text-danger"></i></button>
@@ -729,9 +740,19 @@
                 quantity_fraction = parseFloat($(`#input-quantity-fraction-${id}`).val()) || 0;
             }
             // --- FIN: Lógica de validación de stock mejorada ---
-            
-            let subtotal = (price_unit * quantity_unit) + (price_fraction * quantity_fraction);
-            $(`#label-subtotal-${id}`).text(subtotal.toFixed(2));
+
+            let subtotal_unit = price_unit * quantity_unit;
+            $(`#label-subtotal-unit-${id}`).text(subtotal_unit.toFixed(2));
+
+            let subtotal_fraction = 0;
+            if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
+                subtotal_fraction = price_fraction * quantity_fraction;
+                $(`#label-subtotal-fraction-${id}`).text(subtotal_fraction.toFixed(2));
+            }
+
+            // Actualizar el valor oculto que suma ambos subtotales para el total general
+            let subtotal = subtotal_unit + subtotal_fraction;
+            $(`#label-subtotal-${id}`).val(subtotal.toFixed(2));
             getTotal();
         }
 
@@ -1059,7 +1080,7 @@
         function getTotal() {
             totalAmount = 0;
             $(".label-subtotal").each(function() {
-                totalAmount += parseFloat($(this).text()) || 0;
+                totalAmount += parseFloat($(this).val()) || 0;
             });
             $('#label-total').text(totalAmount.toFixed(2));
             $('#amountTotalSale').val(totalAmount.toFixed(2));

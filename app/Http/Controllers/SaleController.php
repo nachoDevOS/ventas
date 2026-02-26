@@ -62,6 +62,7 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        return $request;
         $this->custom_authorize('add_sales');
         if(!$request->products)
         {

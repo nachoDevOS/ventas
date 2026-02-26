@@ -67,6 +67,7 @@ class PersonController extends Controller
             'image.mimes' => 'La imagen debe tener uno de los siguientes formatos: jpeg, jpg, png, bmp, webp.',
             'image.max' => 'La imagen no puede pesar más de 2 megabytes (MB).' // ✍️ CAMBIO AQUÍ: Mensaje personalizado para el tamaño
         ]);
+        DB::beginTransaction();
         try {
             // Si envian las imágenes
             Person::create([
