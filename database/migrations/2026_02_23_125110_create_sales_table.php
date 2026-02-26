@@ -16,8 +16,9 @@ return new class extends Migration
             $table->foreignId('person_id')->nullable()->constrained('people');
             $table->foreignId('cashier_id')->nullable()->constrained('cashiers');
 
-            $table->string('code')->nullable();
-            $table->string('typeSale')->nullable(); //Venta
+            $table->string('typeSale')->nullable(); //Venta o Proforma
+            $table->string('invoiceNumber')->nullable();
+
 
             $table->decimal('amountReceived', 10, 2)->nullable();//monto recibido
             $table->decimal('amountChange', 10, 2)->nullable();//monto de cambio

@@ -17,7 +17,7 @@ class Sale extends Model
         'cashier_id',
         'person_id',
 
-        'code',
+        'invoiceNumber',
         'typeSale',
 
         'amountReceived',

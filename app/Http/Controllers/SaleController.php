@@ -131,7 +131,7 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'person_id' => $request->person_id,
                 // 'cashier_id' => $cashier->id,
-                'code' => $this->generarNumeroFactura($request->typeSale),
+                'invoiceNumber' => $this->generarNumeroFactura($request->typeSale),
                 'typeSale' => $request->typeSale,
                 'amountReceived' => $request->amountReceived,
                 'amountChange' => $request->payment_type == 'Efectivo'? $request->amountReceived-$amountTotal : 0,
