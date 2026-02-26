@@ -138,3 +138,62 @@ Adaptar el diseño de las columnas Precio, Descuento y Subtotal al estilo nativo
 
 **Checkbox de confirmación:** caja gris con border-radius.
 **Botón Registrar/Actualizar:** `btn-success` (verde), tamaño `15px`, border-radius `6px`.
+
+---
+
+## [2026-02-26] Descuento General al Total de la Venta
+
+### Objetivo
+Agregar un campo **Descuento General (Bs.)** en el panel de pago, que se aplica al total de todos los productos (después de sus descuentos por línea), reduciendo el monto final a cobrar.
+
+### Fórmula de cálculo
+```
+Subtotal Productos = Σ (subtotales netos por línea)
+Total Final        = max(0, Subtotal Productos − Descuento General)
+```
+
+### Archivos modificados
+
+#### 1. `database/migrations/2026_02_26_180000_add_general_discount_to_sales_table.php`
+- Nueva migración que agrega la columna `general_discount` (decimal 10,2, nullable, default 0) a la tabla `sales`.
+
+#### 2. `app/Models/Sale.php`
+- Se agregó `'general_discount'` al array `$fillable`.
+
+#### 3. `app/Http/Controllers/SaleController.php`
+**Método `store()`:**
+- Lee `$general_discount = floatval($request->general_discount ?? 0)`.
+- `$amountTotal = max(0, $amountItems - $general_discount)`.
+- `Sale::create()` incluye `'general_discount' => $general_discount`.
+
+**Método `update()`:**
+- Misma lógica aplicada al recalcular `$amountTotal`.
+- `$sale->update()` incluye `'general_discount' => $general_discount`.
+
+#### 4. `resources/views/sales/edit-add.blade.php`
+
+**CSS:**
+- Nueva clase `.general-discount-block` con estilo rojo (igual que descuentos por línea).
+- `.payment-summary` rediseñado para mostrar breakdown vertical con clases `.summary-subtotal`, `.summary-dto`, `.summary-divider`.
+
+**HTML — Panel de pago:**
+- Nuevo `input-group` con addon `Bs.` rojo: `#input-general-discount` (name=`general_discount`).
+- `.payment-summary` ahora muestra tres filas:
+  1. **Subtotal productos** (gris): suma de subtotales por línea → `#label-subtotal-products`
+  2. **Dto. General** (rojo, oculto si = 0): `#general-discount-display` / `#label-general-discount-display`
+  3. **Total a Pagar** (verde, 2em): `#label-total`
+
+**JavaScript — `getTotal()`:**
+- Suma todos los `.label-subtotal` → `subtotalProducts`.
+- Lee `#input-general-discount`; si excede el subtotal, se ajusta al máximo.
+- `totalAmount = max(0, subtotalProducts - generalDiscount)`.
+- Actualiza `#label-subtotal-products`, muestra/oculta `#general-discount-display`, actualiza `#label-total` y `#amountTotalSale`.
+
+### Comportamiento esperado en la UI
+
+| Acción | Resultado |
+|--------|-----------|
+| Ingresar descuento general en Bs. | Total a Pagar se recalcula restando el descuento |
+| Descuento mayor al subtotal de productos | Se ajusta automáticamente al valor máximo |
+| Sin descuento general | La fila "Dto. General" permanece oculta |
+| Editar venta existente | El descuento general guardado se carga automáticamente |

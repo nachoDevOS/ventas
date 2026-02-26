@@ -23,6 +23,7 @@ class Sale extends Model
         'amountReceived',
         'amountChange',
         'amount',
+        'general_discount',
 
         'observation',
         'dateSale',

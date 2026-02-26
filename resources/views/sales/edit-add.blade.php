@@ -3,7 +3,7 @@
 @section('page_title', isset($sale) ? 'Editar Venta' : 'Añadir Venta')
 
 @section('page_header')
-    <div class="container-fluid">
+    {{-- <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-bordered">
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 @stop
 
 @section('content')
@@ -70,13 +70,22 @@
                         .amount-block label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; display: block; }
                         .amount-block .input-group-addon { border-right: 0; font-weight: bold; }
 
+                        /* General discount */
+                        .general-discount-block { margin-bottom: 10px; }
+                        .general-discount-block label { font-size: 12px; font-weight: 700; color: #c0392b; margin-bottom: 4px; display: block; }
+                        .general-discount-block .input-group-addon { background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold; }
+                        .general-discount-block .form-control { border-color: #ebccd1; text-align: right; font-size: 15px; font-weight: 600; }
+
                         /* Total summary */
                         .payment-summary {
                             background: linear-gradient(135deg, #f8fffe 0%, #eafaf4 100%);
                             border: 1px solid #c9f0dc; border-radius: 10px;
                             padding: 14px 18px; margin-bottom: 10px;
-                            display: flex; justify-content: space-between; align-items: center;
                         }
+                        .payment-summary .summary-row { display: flex; justify-content: space-between; align-items: center; }
+                        .payment-summary .summary-subtotal { font-size: 11px; color: #95a5a6; margin-bottom: 3px; }
+                        .payment-summary .summary-dto { font-size: 11px; color: #e74c3c; margin-bottom: 4px; }
+                        .payment-summary .summary-divider { border-top: 1px solid #c9f0dc; margin: 6px 0; }
                         .payment-summary .total-label { font-size: 13px; font-weight: 600; color: #555; }
                         .payment-summary .total-label i { color: #27ae60; margin-right: 5px; }
                         .payment-summary .total-value { font-size: 2em; font-weight: 800; color: #27ae60; line-height: 1; }
@@ -174,9 +183,31 @@
                                 </div>
 
                                 <div class="col-md-12">
+                                    <div class="general-discount-block">
+                                        <label><i class="fa-solid fa-scissors"></i> Descuento General (Bs.)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon">Bs.</span>
+                                            <input type="number" name="general_discount" id="input-general-discount"
+                                                   class="form-control" step="0.01" min="0"
+                                                   value="{{ isset($sale) ? ($sale->general_discount ?? 0) : 0 }}"
+                                                   placeholder="0.00"
+                                                   onkeyup="getTotal()" onchange="getTotal()">
+                                        </div>
+                                    </div>
                                     <div class="payment-summary">
-                                        <span class="total-label"><i class="fa-solid fa-receipt"></i> Total a Pagar</span>
-                                        <span class="total-value"><small>Bs.</small><b id="label-total">0.00</b></span>
+                                        <div class="summary-row summary-subtotal">
+                                            <span><i class="fa-solid fa-list"></i> Subtotal productos:</span>
+                                            <span>Bs. <b id="label-subtotal-products">0.00</b></span>
+                                        </div>
+                                        <div id="general-discount-display" class="summary-row summary-dto" style="display:none;">
+                                            <span><i class="fa-solid fa-minus"></i> Dto. General:</span>
+                                            <span>− Bs. <b id="label-general-discount-display">0.00</b></span>
+                                        </div>
+                                        <div class="summary-divider"></div>
+                                        <div class="summary-row">
+                                            <span class="total-label"><i class="fa-solid fa-receipt"></i> Total a Pagar</span>
+                                            <span class="total-value"><small>Bs.</small><b id="label-total">0.00</b></span>
+                                        </div>
                                     </div>
                                     <div id="change-message-error" class="payment-error" style="display:none;">
                                         <span><i class="fa-solid fa-circle-exclamation"></i> Error en el monto</span>
@@ -1235,10 +1266,28 @@
         }
 
         function getTotal() {
-            totalAmount = 0;
+            let subtotalProducts = 0;
             $(".label-subtotal").each(function() {
-                totalAmount += parseFloat($(this).val()) || 0;
+                subtotalProducts += parseFloat($(this).val()) || 0;
             });
+
+            let generalDiscount = parseFloat($('#input-general-discount').val()) || 0;
+            if (generalDiscount > subtotalProducts) {
+                generalDiscount = subtotalProducts;
+                $('#input-general-discount').val(generalDiscount.toFixed(2));
+            }
+
+            totalAmount = Math.max(0, subtotalProducts - generalDiscount);
+
+            $('#label-subtotal-products').text(subtotalProducts.toFixed(2));
+
+            if (generalDiscount > 0) {
+                $('#label-general-discount-display').text(generalDiscount.toFixed(2));
+                $('#general-discount-display').css('display', 'flex');
+            } else {
+                $('#general-discount-display').hide();
+            }
+
             $('#label-total').text(totalAmount.toFixed(2));
             $('#amountTotalSale').val(totalAmount.toFixed(2));
             updatePaymentLogic();

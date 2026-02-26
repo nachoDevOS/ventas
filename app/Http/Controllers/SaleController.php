@@ -94,7 +94,8 @@ class SaleController extends Controller
             }
         }
 
-        $amountTotal = $amountItems;
+        $general_discount = floatval($request->general_discount ?? 0);
+        $amountTotal = max(0, $amountItems - $general_discount);
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
 
@@ -126,6 +127,7 @@ class SaleController extends Controller
                 'amountReceived' => $request->amountReceived,
                 'amountChange' => $request->payment_type == 'Efectivo'? $request->amountReceived-$amountTotal : 0,
                 'amount' => $amountTotal ?? 0,
+                'general_discount' => $general_discount,
                 'observation' => $request->observation,
                 'dateSale' => Carbon::now(),
                 'status' => $request->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash+$amount_qr) >= $amountTotal?'Pagado':'Pendiente'),
@@ -323,7 +325,8 @@ class SaleController extends Controller
                 }
             }
         }
-        $amountTotal = $amountItems;
+        $general_discount = floatval($request->general_discount ?? 0);
+        $amountTotal = max(0, $amountItems - $general_discount);
 
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
@@ -373,6 +376,7 @@ class SaleController extends Controller
                 'amountChange' => $request->payment_type == 'Efectivo' ? $request->amountReceived - $amountTotal : 0, // Ajustar si es necesario
 
                 'amount' => $amountTotal,
+                'general_discount' => $general_discount,
                 'observation' => $request->observation,
                 'status' => $request->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash + $amount_qr) >= $amountTotal ? 'Pagado' : 'Pendiente'),
             ]);
