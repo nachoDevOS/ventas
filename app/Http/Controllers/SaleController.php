@@ -80,22 +80,31 @@ class SaleController extends Controller
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
                     $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
-                    $subtotal_unit = ($value['quantity_unit'] * $value['price_unit']) - $discount_unit;
-                    $amountItems = $amountItems + max(0, $subtotal_unit);
+                    $bruto_unit = $value['quantity_unit'] * $value['price_unit'];
+                    if ($bruto_unit > 0 && $discount_unit >= $bruto_unit) {
+                        $discount_unit = max(0, round($bruto_unit - 0.01, 2));
+                    }
+                    $amountItems = $amountItems + ($bruto_unit - $discount_unit);
                 }
                 if(isset($value['quantity_fraction']) && isset($value['price_fraction']))
                 {
                     if($value['quantity_fraction'] > 0 && $value['price_fraction'] > 0){
                         $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
-                        $subtotal_fraction = ($value['quantity_fraction'] * $value['price_fraction']) - $discount_fraction;
-                        $amountItems = $amountItems + max(0, $subtotal_fraction);
+                        $bruto_fraction = $value['quantity_fraction'] * $value['price_fraction'];
+                        if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
+                            $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
+                        }
+                        $amountItems = $amountItems + ($bruto_fraction - $discount_fraction);
                     }
                 }
             }
         }
 
         $general_discount = floatval($request->general_discount ?? 0);
-        $amountTotal = max(0, $amountItems - $general_discount);
+        if ($amountItems > 0 && $general_discount >= $amountItems) {
+            $general_discount = max(0, round($amountItems - 0.01, 2));
+        }
+        $amountTotal = $amountItems - $general_discount;
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
 
@@ -169,7 +178,11 @@ class SaleController extends Controller
                 // Lógica para venta de unidades enteras
                 if ($quantity_unit > 0) {
                     $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
-                    $amount_unit = max(0, ($value['price_unit'] * $quantity_unit) - $discount_unit);
+                    $bruto_unit = $value['price_unit'] * $quantity_unit;
+                    if ($bruto_unit > 0 && $discount_unit >= $bruto_unit) {
+                        $discount_unit = max(0, round($bruto_unit - 0.01, 2));
+                    }
+                    $amount_unit = $bruto_unit - $discount_unit;
                     SaleDetail::create([
                         'sale_id' => $sale->id,
                         'itemStock_id' => $itemStock->id,
@@ -205,7 +218,11 @@ class SaleController extends Controller
                     }
 
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
-                    $amount_fraction = max(0, ($value['price_fraction'] * $quantity_fraction) - $discount_fraction);
+                    $bruto_fraction = $value['price_fraction'] * $quantity_fraction;
+                    if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
+                        $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
+                    }
+                    $amount_fraction = $bruto_fraction - $discount_fraction;
                     $itemStockFraction = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity' => $quantity_fraction,
@@ -312,21 +329,30 @@ class SaleController extends Controller
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
                     $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
-                    $subtotal_unit = ($value['quantity_unit'] * $value['price_unit']) - $discount_unit;
-                    $amountItems = $amountItems + max(0, $subtotal_unit);
+                    $bruto_unit = $value['quantity_unit'] * $value['price_unit'];
+                    if ($bruto_unit > 0 && $discount_unit >= $bruto_unit) {
+                        $discount_unit = max(0, round($bruto_unit - 0.01, 2));
+                    }
+                    $amountItems = $amountItems + ($bruto_unit - $discount_unit);
                 }
                 if(isset($value['quantity_fraction']) && isset($value['price_fraction']))
                 {
                     if($value['quantity_fraction'] > 0 && $value['price_fraction'] > 0){
                         $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
-                        $subtotal_fraction = ($value['quantity_fraction'] * $value['price_fraction']) - $discount_fraction;
-                        $amountItems = $amountItems + max(0, $subtotal_fraction);
+                        $bruto_fraction = $value['quantity_fraction'] * $value['price_fraction'];
+                        if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
+                            $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
+                        }
+                        $amountItems = $amountItems + ($bruto_fraction - $discount_fraction);
                     }
                 }
             }
         }
         $general_discount = floatval($request->general_discount ?? 0);
-        $amountTotal = max(0, $amountItems - $general_discount);
+        if ($amountItems > 0 && $general_discount >= $amountItems) {
+            $general_discount = max(0, round($amountItems - 0.01, 2));
+        }
+        $amountTotal = $amountItems - $general_discount;
 
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
@@ -398,7 +424,11 @@ class SaleController extends Controller
                 // Venta de Unidades
                 if ($quantity_unit > 0) {
                     $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
-                    $amount_unit = max(0, ($value['price_unit'] * $quantity_unit) - $discount_unit);
+                    $bruto_unit = $value['price_unit'] * $quantity_unit;
+                    if ($bruto_unit > 0 && $discount_unit >= $bruto_unit) {
+                        $discount_unit = max(0, round($bruto_unit - 0.01, 2));
+                    }
+                    $amount_unit = $bruto_unit - $discount_unit;
                     SaleDetail::create([
                         'sale_id' => $sale->id,
                         'itemStock_id' => $itemStock->id,
@@ -433,7 +463,11 @@ class SaleController extends Controller
                         $itemStock->decrement('stock', $opened_units_after);
                     }
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
-                    $amount_fraction = max(0, ($value['price_fraction'] * $quantity_fraction) - $discount_fraction);
+                    $bruto_fraction = $value['price_fraction'] * $quantity_fraction;
+                    if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
+                        $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
+                    }
+                    $amount_fraction = $bruto_fraction - $discount_fraction;
                     $itemStockFraction = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity' => $quantity_fraction,

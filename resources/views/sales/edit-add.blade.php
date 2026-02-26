@@ -896,14 +896,18 @@
             }
             // --- FIN: Lógica de validación de stock mejorada ---
 
-            // Validar que el descuento no exceda el bruto de la línea
+            // Descuento de unidad debe ser estrictamente menor al bruto
             let bruto_unit = price_unit * quantity_unit;
-            if (discount_unit > bruto_unit) {
-                discount_unit = bruto_unit;
+            if (bruto_unit > 0 && discount_unit >= bruto_unit) {
+                discount_unit = parseFloat((bruto_unit - 0.01).toFixed(2));
                 $(`#input-discount-unit-${id}`).val(discount_unit.toFixed(2));
+                toastr.warning('El descuento no puede ser igual o mayor al bruto de la línea.', 'Descuento ajustado');
+            } else if (bruto_unit === 0) {
+                discount_unit = 0;
+                $(`#input-discount-unit-${id}`).val('0.00');
             }
 
-            let subtotal_unit = Math.max(0, bruto_unit - discount_unit);
+            let subtotal_unit = bruto_unit - discount_unit;
             $(`#label-bruto-unit-${id}`).text(bruto_unit.toFixed(2));
             if (discount_unit > 0) {
                 $(`#label-dto-unit-${id}`).text(discount_unit.toFixed(2));
@@ -916,11 +920,16 @@
             let subtotal_fraction = 0;
             if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
                 let bruto_fraction = price_fraction * quantity_fraction;
-                if (discount_fraction > bruto_fraction) {
-                    discount_fraction = bruto_fraction;
+                // Descuento de fracción debe ser estrictamente menor al bruto
+                if (bruto_fraction > 0 && discount_fraction >= bruto_fraction) {
+                    discount_fraction = parseFloat((bruto_fraction - 0.01).toFixed(2));
                     $(`#input-discount-fraction-${id}`).val(discount_fraction.toFixed(2));
+                    toastr.warning('El descuento no puede ser igual o mayor al bruto de la línea.', 'Descuento ajustado');
+                } else if (bruto_fraction === 0) {
+                    discount_fraction = 0;
+                    $(`#input-discount-fraction-${id}`).val('0.00');
                 }
-                subtotal_fraction = Math.max(0, bruto_fraction - discount_fraction);
+                subtotal_fraction = bruto_fraction - discount_fraction;
                 $(`#label-bruto-fraction-${id}`).text(bruto_fraction.toFixed(2));
                 if (discount_fraction > 0) {
                     $(`#label-dto-fraction-${id}`).text(discount_fraction.toFixed(2));
@@ -1272,12 +1281,17 @@
             });
 
             let generalDiscount = parseFloat($('#input-general-discount').val()) || 0;
-            if (generalDiscount > subtotalProducts) {
-                generalDiscount = subtotalProducts;
+            // El descuento general debe ser estrictamente menor al subtotal de productos
+            if (subtotalProducts > 0 && generalDiscount >= subtotalProducts) {
+                generalDiscount = parseFloat((subtotalProducts - 0.01).toFixed(2));
                 $('#input-general-discount').val(generalDiscount.toFixed(2));
+                toastr.warning('El descuento general no puede ser igual o mayor al total de productos.', 'Descuento ajustado');
+            } else if (subtotalProducts === 0) {
+                generalDiscount = 0;
+                $('#input-general-discount').val('0.00');
             }
 
-            totalAmount = Math.max(0, subtotalProducts - generalDiscount);
+            totalAmount = subtotalProducts - generalDiscount;
 
             $('#label-subtotal-products').text(subtotalProducts.toFixed(2));
 
