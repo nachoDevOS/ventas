@@ -1,0 +1,17 @@
+# Dependencias de PHP y Composer
+/vendor/
+
+# Archivos de Node y compilados
+/node_modules/
+/public/mix-manifest.json
+/public/storage/
+
+# Archivos de Laravel y Voyager
+/storage/
+/bootstrap/cache/
+.env.example
+
+
+# Archivos de sistema
+.git/
+.phpunit.result.cache
