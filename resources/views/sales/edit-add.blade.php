@@ -243,6 +243,14 @@
             margin-bottom: 10px !important;
         }
 
+        #dataTable .tr-item td {
+            vertical-align: middle;
+        }
+
+        #dataTable .tr-item {
+            line-height: 1.2;
+        }
+
         .label-description {
             cursor: pointer;
         }
@@ -391,52 +399,52 @@
                     let remainingFractions = product.stock_details.remaining_fractions;
                     let fractionName = product.item.fraction_presentation.name;
                     let presentationName = product.item.presentation.name;
-                    stockInfo = `<span class="label label-info" style="font-size:12px; padding: 5px 8px;">
+                    stockInfo = `<span class="label label-info" style="font-size:11px; padding: 2px 6px;">
                                     <i class="fa-brands fa-dropbox"></i> Stock: ${fullUnits} ${presentationName} y ${remainingFractions} ${fractionName}
                                  </span>`;
                 } else {
                     let stockLabel = product.stock > 10 ? 'success' : (product.stock > 0 ? 'warning' : 'danger');
-                    stockInfo = `<span class="label label-${stockLabel}" style="font-size:12px; padding: 5px 8px;">
+                    stockInfo = `<span class="label label-${stockLabel}" style="font-size:11px; padding: 2px 6px;">
                                     <i class="fa-brands fa-dropbox"></i> Stock: ${product.stock} ${product.item.presentation.name}
                                  </span>`;
                 }
 
                 let contentInfo = '';
                 if (product.dispensed === 'Fraccionado' && product.dispensedQuantity) {
-                    contentInfo = `<div><i class="fa-solid fa-vial" style="color: #e74c3c; width: 14px;"></i> <strong>Contenido:</strong> ${product.dispensedQuantity} ${product.item.fraction_presentation ? product.item.fraction_presentation.name : 'Frac.'} / ${product.item.presentation ? product.item.presentation.name : 'Unid.'}</div>`;
+                    contentInfo = `<div><i class="fa-solid fa-vial" style="color: #e74c3c; width: 12px;"></i> <strong>Cont.:</strong> ${product.dispensedQuantity} ${product.item.fraction_presentation ? product.item.fraction_presentation.name : 'Frac.'} / ${product.item.presentation ? product.item.presentation.name : 'Unid.'}</div>`;
                 }
 
                 let observationInfo = '';
                 if (product.item.observation) {
-                    observationInfo = `<div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px; padding: 5px 8px; background: #f8f9fa; border-radius: 4px; border: 1px solid #f1f1f1; width: 100%;">
-                                            <i class="fa-solid fa-clipboard-list" style="color: #f39c12;"></i> <strong>Detalle:</strong> ${product.item.observation}
+                    observationInfo = `<div style="font-size: 11px; color: #7f8c8d; margin-bottom: 3px; padding: 2px 6px; background: #f8f9fa; border-radius: 3px; border: 1px solid #f1f1f1;">
+                                            <i class="fa-solid fa-clipboard-list" style="color: #f39c12;"></i> ${product.item.observation}
                                        </div>`;
                 }
 
                 let quantityInputs = `
-                    <label for="input-quantity-unit-${product.id}">${product.item.presentation.name}(s)</label>
-                    <div style="margin-bottom: 5px;">
-                        <input type="number" name="products[${product.id}][quantity_unit]" step="1" min="0" style="text-align: right" class="form-control" id="input-quantity-unit-${product.id}" value="0" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                    <label style="font-size: 10px; color: #7f8c8d; font-weight: 600; margin-bottom: 1px; display: block;">${product.item.presentation.name}(s)</label>
+                    <div style="margin-bottom: 4px;">
+                        <input type="number" name="products[${product.id}][quantity_unit]" step="1" min="0" style="text-align: right; height: 28px; padding: 3px 6px; font-size: 12px;" class="form-control" id="input-quantity-unit-${product.id}" value="0" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                     </div>
                 `;
 
                 if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
                     quantityInputs += `
-                        <label for="input-quantity-fraction-${product.id}">${product.item.fraction_presentation.name}(s)</label>
+                        <label style="font-size: 10px; color: #7f8c8d; font-weight: 600; margin-bottom: 1px; display: block;">${product.item.fraction_presentation.name}(s)</label>
                         <div>
-                            <input type="number" name="products[${product.id}][quantity_fraction]" step="0.1" min="0" style="text-align: right" class="form-control" id="input-quantity-fraction-${product.id}" value="0" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                            <input type="number" name="products[${product.id}][quantity_fraction]" step="0.1" min="0" style="text-align: right; height: 28px; padding: 3px 6px; font-size: 12px;" class="form-control" id="input-quantity-fraction-${product.id}" value="0" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                         </div>
                     `;
                 }
 
                 let discountInputs = `
-                    <label for="input-discount-unit-${product.id}" style="font-size: 12px; color: #c0392b; font-weight: 600; margin-bottom: 3px;">
-                        <i class="fa-solid fa-scissors"></i> Dto. ${product.item.presentation.name}
+                    <label for="input-discount-unit-${product.id}" style="font-size: 10px; color: #c0392b; font-weight: 600; margin-bottom: 1px; display: block;">
+                        <i class="fa-solid fa-scissors"></i> ${product.item.presentation.name}
                     </label>
-                    <div class="input-group" style="margin-bottom: 8px;">
-                        <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold;">Bs.</span>
+                    <div class="input-group" style="margin-bottom: 4px;">
+                        <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold; padding: 3px 6px; font-size: 11px;">Bs.</span>
                         <input type="number" name="products[${product.id}][discount_unit]" step="0.01" min="0"
-                               style="text-align: right; border-color: #ebccd1;"
+                               style="text-align: right; border-color: #ebccd1; height: 28px; padding: 3px 6px; font-size: 12px;"
                                class="form-control" id="input-discount-unit-${product.id}" value="0"
                                onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                     </div>
@@ -444,13 +452,13 @@
 
                 if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
                     discountInputs += `
-                        <label for="input-discount-fraction-${product.id}" style="font-size: 12px; color: #c0392b; font-weight: 600; margin-bottom: 3px;">
-                            <i class="fa-solid fa-scissors"></i> Dto. ${product.item.fraction_presentation.name}
+                        <label for="input-discount-fraction-${product.id}" style="font-size: 10px; color: #c0392b; font-weight: 600; margin-bottom: 1px; display: block;">
+                            <i class="fa-solid fa-scissors"></i> ${product.item.fraction_presentation.name}
                         </label>
                         <div class="input-group">
-                            <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold;">Bs.</span>
+                            <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold; padding: 3px 6px; font-size: 11px;">Bs.</span>
                             <input type="number" name="products[${product.id}][discount_fraction]" step="0.01" min="0"
-                                   style="text-align: right; border-color: #ebccd1;"
+                                   style="text-align: right; border-color: #ebccd1; height: 28px; padding: 3px 6px; font-size: 12px;"
                                    class="form-control" id="input-discount-fraction-${product.id}" value="0"
                                    onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                         </div>
@@ -459,86 +467,84 @@
 
                 let newRow = `
                     <tr class="tr-item" id="tr-item-${product.id}">
-                        <td class="td-item"></td>
-                        <td>
+                        <td class="td-item" style="vertical-align: middle; font-size: 13px; font-weight: bold;"></td>
+                        <td style="padding: 4px 6px;">
                             <input type="hidden" name="products[${product.id}][item_stock_id]" value="${product.id}"/>
                             <input type="hidden" name="products[${product.id}][id]" value="${product.id}"/>
                             <input type="hidden" name="products[${product.id}][detail_id]" value="0"/>
-                            <div style="display: flex; align-items: flex-start;">
-                                <div style="flex-grow: 1; line-height: 1.4;">
-                                    <div style="font-size: 15px; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">
-                                        <i class="fa-solid fa-pills" style="color: #3498db;"></i> ${product.item.nameGeneric} ${product.item.nameTrade ? `<span style="color: #7f8c8d; font-weight: normal;">| ${product.item.nameTrade}</span>` : ''}
+                            <div style="line-height: 1.3;">
+                                <div style="font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 3px;">
+                                    <i class="fa-solid fa-pills" style="color: #3498db;"></i> ${product.item.nameGeneric} ${product.item.nameTrade ? `<span style="color: #7f8c8d; font-weight: normal;">| ${product.item.nameTrade}</span>` : ''}
+                                </div>
+                                <div style="font-size: 11px; color: #555;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 2px 12px; margin-bottom: 3px;">
+                                        <div><i class="fa-solid fa-tags" style="color: #2ecc71; width: 12px;"></i> ${product.item.category.name}</div>
+                                        <div><i class="fa-solid fa-flask" style="color: #3498db; width: 12px;"></i> ${product.item.laboratory ? product.item.laboratory.name : 'SN'}</div>
+                                        <div><i class="fa-solid fa-copyright" style="color: #9b59b6; width: 12px;"></i> ${product.item.line ? product.item.line.name : 'SN'}</div>
+                                        ${contentInfo}
                                     </div>
-                                    <div style="font-size: 12px; color: #555;">
-                                        <div style="display: flex; flex-wrap: wrap; gap: 5px 15px; margin-bottom: 5px;">
-                                            <div><i class="fa-solid fa-tags" style="color: #2ecc71; width: 14px;"></i> <strong>Categoría:</strong> ${product.item.category.name}</div>
-                                            <div><i class="fa-solid fa-flask" style="color: #3498db; width: 14px;"></i> ${product.item.laboratory ? product.item.laboratory.name : 'SN'}</div>
-                                            <div><i class="fa-solid fa-copyright" style="color: #9b59b6; width: 14px;"></i> ${product.item.line ? product.item.line.name : 'SN'}</div>
-                                            ${contentInfo}
-                                        </div>
-                                        ${observationInfo}
-                                        <div id="stock-label-${product.id}" style="margin-top: 5px;">${stockInfo}</div>
-                                    </div>
+                                    ${observationInfo}
+                                    <div id="stock-label-${product.id}" style="margin-top: 3px;">${stockInfo}</div>
                                 </div>
                             </div>
                         </td>
-                        <td style="vertical-align: middle; padding: 5px;">
-                            <label for="input-price-unit-${product.id}" style="font-size: 12px; color: #2c3e50; font-weight: 600; margin-bottom: 3px;">
+                        <td style="vertical-align: middle; padding: 4px;">
+                            <label style="font-size: 10px; color: #2c3e50; font-weight: 600; margin-bottom: 1px; display: block;">
                                 <i class="fa-solid fa-tag" style="color: #3498db;"></i> ${product.item.presentation.name}
                             </label>
-                            <div class="input-group" style="margin-bottom: 8px;">
-                                <span class="input-group-addon" style="font-weight: bold;">Bs.</span>
-                                <input type="number" name="products[${product.id}][price_unit]" step="0.01" min="0.1" style="text-align: right" class="form-control" id="input-price-unit-${product.id}" value="${product.priceSale || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                            <div class="input-group" style="margin-bottom: 4px;">
+                                <span class="input-group-addon" style="font-weight: bold; padding: 3px 6px; font-size: 11px;">Bs.</span>
+                                <input type="number" name="products[${product.id}][price_unit]" step="0.01" min="0.1" style="text-align: right; height: 28px; padding: 3px 6px; font-size: 12px;" class="form-control" id="input-price-unit-${product.id}" value="${product.priceSale || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                             </div>
                             ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? `
-                            <label for="input-price-fraction-${product.id}" style="font-size: 12px; color: #2c3e50; font-weight: 600; margin-bottom: 3px;">
+                            <label style="font-size: 10px; color: #2c3e50; font-weight: 600; margin-bottom: 1px; display: block;">
                                 <i class="fa-solid fa-tag" style="color: #3498db;"></i> ${product.item.fraction_presentation.name}
                             </label>
                             <div class="input-group">
-                                <span class="input-group-addon" style="font-weight: bold;">Bs.</span>
-                                <input type="number" name="products[${product.id}][price_fraction]" step="0.01" min="0.1" style="text-align: right" class="form-control" id="input-price-fraction-${product.id}" value="${product.dispensedPrice || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                                <span class="input-group-addon" style="font-weight: bold; padding: 3px 6px; font-size: 11px;">Bs.</span>
+                                <input type="number" name="products[${product.id}][price_fraction]" step="0.01" min="0.1" style="text-align: right; height: 28px; padding: 3px 6px; font-size: 12px;" class="form-control" id="input-price-fraction-${product.id}" value="${product.dispensedPrice || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                             </div>` : '' }
                         </td>
-                        <td style="vertical-align: middle; padding: 5px;">
+                        <td style="vertical-align: middle; padding: 4px;">
                             ${quantityInputs}
                         </td>
-                        <td style="vertical-align: middle; padding: 5px;">
+                        <td style="vertical-align: middle; padding: 4px;">
                             ${discountInputs}
                         </td>
-                        <td style="vertical-align: middle; padding: 8px; min-width: 130px;">
-                            <div id="subtotal-unit-container-${product.id}" style="margin-bottom: 10px; padding-bottom: 8px; ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? 'border-bottom: 1px dashed #ddd;' : '' }">
-                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 4px;">
-                                    <i class="fa-solid fa-cube" style="width: 12px;"></i> <em>${product.item.presentation.name}</em>
+                        <td style="vertical-align: middle; padding: 4px 6px; min-width: 115px;">
+                            <div id="subtotal-unit-container-${product.id}" style="margin-bottom: 6px; padding-bottom: 5px; ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? 'border-bottom: 1px dashed #ddd;' : '' }">
+                                <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 2px;">
+                                    <i class="fa-solid fa-cube" style="width: 10px;"></i> <em>${product.item.presentation.name}</em>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #95a5a6; margin-bottom: 2px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #95a5a6; margin-bottom: 1px;">
                                     <span>Bruto:</span>
                                     <span><b id="label-bruto-unit-${product.id}" style="font-family: monospace;">0.00</b></span>
                                 </div>
-                                <div id="discount-unit-display-${product.id}" style="display: none; justify-content: space-between; font-size: 11px; color: #e74c3c; margin-bottom: 2px;">
+                                <div id="discount-unit-display-${product.id}" style="display: none; justify-content: space-between; font-size: 10px; color: #e74c3c; margin-bottom: 1px;">
                                     <span><i class="fa-solid fa-minus"></i> Dto:</span>
                                     <span><b id="label-dto-unit-${product.id}" style="font-family: monospace;">0.00</b></span>
                                 </div>
-                                <div style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px; display: flex; justify-content: space-between; align-items: center;">
-                                    <small class="text-muted">Bs.</small>
-                                    <b id="label-subtotal-unit-${product.id}" style="font-size: 1.15em; color: #27ae60;">0.00</b>
+                                <div style="border-top: 1px solid #ddd; margin-top: 3px; padding-top: 3px; display: flex; justify-content: space-between; align-items: center;">
+                                    <small class="text-muted" style="font-size: 10px;">Bs.</small>
+                                    <b id="label-subtotal-unit-${product.id}" style="font-size: 1.1em; color: #27ae60;">0.00</b>
                                 </div>
                             </div>
                             ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? `
-                            <div id="subtotal-fraction-container-${product.id}" style="margin-bottom: 8px;">
-                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 4px;">
-                                    <i class="fa-solid fa-vial" style="width: 12px;"></i> <em>${product.item.fraction_presentation.name}</em>
+                            <div id="subtotal-fraction-container-${product.id}" style="margin-bottom: 4px;">
+                                <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 2px;">
+                                    <i class="fa-solid fa-vial" style="width: 10px;"></i> <em>${product.item.fraction_presentation.name}</em>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #95a5a6; margin-bottom: 2px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #95a5a6; margin-bottom: 1px;">
                                     <span>Bruto:</span>
                                     <span><b id="label-bruto-fraction-${product.id}" style="font-family: monospace;">0.00</b></span>
                                 </div>
-                                <div id="discount-fraction-display-${product.id}" style="display: none; justify-content: space-between; font-size: 11px; color: #e74c3c; margin-bottom: 2px;">
+                                <div id="discount-fraction-display-${product.id}" style="display: none; justify-content: space-between; font-size: 10px; color: #e74c3c; margin-bottom: 1px;">
                                     <span><i class="fa-solid fa-minus"></i> Dto:</span>
                                     <span><b id="label-dto-fraction-${product.id}" style="font-family: monospace;">0.00</b></span>
                                 </div>
-                                <div style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px; display: flex; justify-content: space-between; align-items: center;">
-                                    <small class="text-muted">Bs.</small>
-                                    <b id="label-subtotal-fraction-${product.id}" style="font-size: 1.15em; color: #27ae60;">0.00</b>
+                                <div style="border-top: 1px solid #ddd; margin-top: 3px; padding-top: 3px; display: flex; justify-content: space-between; align-items: center;">
+                                    <small class="text-muted" style="font-size: 10px;">Bs.</small>
+                                    <b id="label-subtotal-fraction-${product.id}" style="font-size: 1.1em; color: #27ae60;">0.00</b>
                                 </div>
                             </div>` : '' }
                             <input type="hidden" class="label-subtotal" id="label-subtotal-${product.id}" value="0.00" />
