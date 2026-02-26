@@ -189,9 +189,10 @@
                                             <tr>
                                                 <th style="width: 5%">N&deg;</th>
                                                 <th style="">Detalles</th>
-                                                <th style="text-align: center; width:8%">Precio</th>
+                                                <th style="text-align: center; width:15%">Precio</th>
                                                 <th style="text-align: center; width:8%">Cantidad</th>
-                                                <th style="text-align: center; width:12%">Subtotal</th>
+                                                <th style="text-align: center; width:12%">Descuento</th>
+                                                <th style="text-align: center; width:15%">Subtotal</th>
                                                 <th style="width: 1%"></th>
                                             </tr>
                                         </thead>
@@ -428,6 +429,34 @@
                     `;
                 }
 
+                let discountInputs = `
+                    <label for="input-discount-unit-${product.id}" style="font-size: 12px; color: #c0392b; font-weight: 600; margin-bottom: 3px;">
+                        <i class="fa-solid fa-scissors"></i> Dto. ${product.item.presentation.name}
+                    </label>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold;">Bs.</span>
+                        <input type="number" name="products[${product.id}][discount_unit]" step="0.01" min="0"
+                               style="text-align: right; border-color: #ebccd1;"
+                               class="form-control" id="input-discount-unit-${product.id}" value="0"
+                               onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                    </div>
+                `;
+
+                if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
+                    discountInputs += `
+                        <label for="input-discount-fraction-${product.id}" style="font-size: 12px; color: #c0392b; font-weight: 600; margin-bottom: 3px;">
+                            <i class="fa-solid fa-scissors"></i> Dto. ${product.item.fraction_presentation.name}
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-addon" style="background-color: #fdf2f2; color: #e74c3c; border-color: #ebccd1; font-weight: bold;">Bs.</span>
+                            <input type="number" name="products[${product.id}][discount_fraction]" step="0.01" min="0"
+                                   style="text-align: right; border-color: #ebccd1;"
+                                   class="form-control" id="input-discount-fraction-${product.id}" value="0"
+                                   onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
+                        </div>
+                    `;
+                }
+
                 let newRow = `
                     <tr class="tr-item" id="tr-item-${product.id}">
                         <td class="td-item"></td>
@@ -454,28 +483,63 @@
                             </div>
                         </td>
                         <td style="vertical-align: middle; padding: 5px;">
-                            <label for="input-price-unit-${product.id}">Bs. / ${product.item.presentation.name}.</label>
-                            <div style="margin-bottom: 5px;">
+                            <label for="input-price-unit-${product.id}" style="font-size: 12px; color: #2c3e50; font-weight: 600; margin-bottom: 3px;">
+                                <i class="fa-solid fa-tag" style="color: #3498db;"></i> ${product.item.presentation.name}
+                            </label>
+                            <div class="input-group" style="margin-bottom: 8px;">
+                                <span class="input-group-addon" style="font-weight: bold;">Bs.</span>
                                 <input type="number" name="products[${product.id}][price_unit]" step="0.01" min="0.1" style="text-align: right" class="form-control" id="input-price-unit-${product.id}" value="${product.priceSale || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                             </div>
                             ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? `
-                            <label for="input-price-fraction-${product.id}">Bs. / ${product.item.fraction_presentation.name}.</label>
-                            <div>
+                            <label for="input-price-fraction-${product.id}" style="font-size: 12px; color: #2c3e50; font-weight: 600; margin-bottom: 3px;">
+                                <i class="fa-solid fa-tag" style="color: #3498db;"></i> ${product.item.fraction_presentation.name}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-addon" style="font-weight: bold;">Bs.</span>
                                 <input type="number" name="products[${product.id}][price_fraction]" step="0.01" min="0.1" style="text-align: right" class="form-control" id="input-price-fraction-${product.id}" value="${product.dispensedPrice || 0}" onkeyup="getSubtotal(${product.id})" onchange="getSubtotal(${product.id})">
                             </div>` : '' }
                         </td>
                         <td style="vertical-align: middle; padding: 5px;">
                             ${quantityInputs}
                         </td>
-                        <td class="text-right" style="vertical-align: middle;">
-                            <div id="subtotal-unit-container-${product.id}" style="margin-bottom: 15px;">
-                                <small>Subtotal (${product.item.presentation.name})</small><br>
-                                <b id="label-subtotal-unit-${product.id}" style="font-size: 1.1em;">0.00</b>
+                        <td style="vertical-align: middle; padding: 5px;">
+                            ${discountInputs}
+                        </td>
+                        <td style="vertical-align: middle; padding: 8px; min-width: 130px;">
+                            <div id="subtotal-unit-container-${product.id}" style="margin-bottom: 10px; padding-bottom: 8px; ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? 'border-bottom: 1px dashed #ddd;' : '' }">
+                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-cube" style="width: 12px;"></i> <em>${product.item.presentation.name}</em>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #95a5a6; margin-bottom: 2px;">
+                                    <span>Bruto:</span>
+                                    <span><b id="label-bruto-unit-${product.id}" style="font-family: monospace;">0.00</b></span>
+                                </div>
+                                <div id="discount-unit-display-${product.id}" style="display: none; justify-content: space-between; font-size: 11px; color: #e74c3c; margin-bottom: 2px;">
+                                    <span><i class="fa-solid fa-minus"></i> Dto:</span>
+                                    <span><b id="label-dto-unit-${product.id}" style="font-family: monospace;">0.00</b></span>
+                                </div>
+                                <div style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                                    <small class="text-muted">Bs.</small>
+                                    <b id="label-subtotal-unit-${product.id}" style="font-size: 1.15em; color: #27ae60;">0.00</b>
+                                </div>
                             </div>
                             ${ (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) ? `
-                            <div id="subtotal-fraction-container-${product.id}">
-                                <small>Subtotal (${product.item.fraction_presentation.name})</small><br>
-                                <b id="label-subtotal-fraction-${product.id}" style="font-size: 1.1em;">0.00</b>
+                            <div id="subtotal-fraction-container-${product.id}" style="margin-bottom: 8px;">
+                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-vial" style="width: 12px;"></i> <em>${product.item.fraction_presentation.name}</em>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #95a5a6; margin-bottom: 2px;">
+                                    <span>Bruto:</span>
+                                    <span><b id="label-bruto-fraction-${product.id}" style="font-family: monospace;">0.00</b></span>
+                                </div>
+                                <div id="discount-fraction-display-${product.id}" style="display: none; justify-content: space-between; font-size: 11px; color: #e74c3c; margin-bottom: 2px;">
+                                    <span><i class="fa-solid fa-minus"></i> Dto:</span>
+                                    <span><b id="label-dto-fraction-${product.id}" style="font-family: monospace;">0.00</b></span>
+                                </div>
+                                <div style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                                    <small class="text-muted">Bs.</small>
+                                    <b id="label-subtotal-fraction-${product.id}" style="font-size: 1.15em; color: #27ae60;">0.00</b>
+                                </div>
                             </div>` : '' }
                             <input type="hidden" class="label-subtotal" id="label-subtotal-${product.id}" value="0.00" />
                         </td>
@@ -614,24 +678,27 @@
                         if (detail.dispensed === 'Fraccionado') {
                             $(`#input-quantity-fraction-${rowId}`).val(detail.quantity);
                             $(`#input-price-fraction-${rowId}`).val(detail.price);
-                            
+                            $(`#input-discount-fraction-${rowId}`).val(detail.discount ?? 0);
+
                             originalData.details.push({
                                 type: 'fraction',
                                 quantity: detail.quantity,
-                                price: detail.price
+                                price: detail.price,
+                                discount: detail.discount ?? 0
                             });
 
                             quantityRestored += parseFloat(detail.quantity) / (stock.dispensedQuantity || 1);
                         } else {
                             $(`#input-quantity-unit-${rowId}`).val(detail.quantity);
                             $(`#input-price-unit-${rowId}`).val(detail.price);
+                            $(`#input-discount-unit-${rowId}`).val(detail.discount ?? 0);
                             $(`input[name="products[${rowId}][detail_id]"]`).val(detail.id);
-                            
-                            // NUEVO: Guardar en datos originales
+
                             originalData.details.push({
                                 type: 'unit',
                                 quantity: detail.quantity,
-                                price: detail.price
+                                price: detail.price,
+                                discount: detail.discount ?? 0
                             });
 
                             quantityRestored += parseFloat(detail.quantity);
@@ -685,15 +752,17 @@
             return restoredProduct;
         }
 
-        // NUEVA FUNCIÓN: Restaurar cantidades y precios originales
+        // NUEVA FUNCIÓN: Restaurar cantidades, precios y descuentos originales
         function restoreOriginalQuantities(productId, originalData) {
             originalData.details.forEach(detail => {
                 if (detail.type === 'fraction') {
                     $(`#input-quantity-fraction-${productId}`).val(detail.quantity);
                     $(`#input-price-fraction-${productId}`).val(detail.price);
+                    $(`#input-discount-fraction-${productId}`).val(detail.discount ?? 0);
                 } else if (detail.type === 'unit') {
                     $(`#input-quantity-unit-${productId}`).val(detail.quantity);
                     $(`#input-price-unit-${productId}`).val(detail.price);
+                    $(`#input-discount-unit-${productId}`).val(detail.discount ?? 0);
                 }
             });
         }
@@ -707,12 +776,15 @@
 
             let price_unit = parseFloat($(`#input-price-unit-${id}`).val()) || 0;
             let quantity_unit = parseInt($(`#input-quantity-unit-${id}`).val()) || 0;
+            let discount_unit = parseFloat($(`#input-discount-unit-${id}`).val()) || 0;
 
             let price_fraction = 0;
             let quantity_fraction = 0;
+            let discount_fraction = 0;
             if (product.dispensed === 'Fraccionado') {
                 price_fraction = parseFloat($(`#input-price-fraction-${id}`).val()) || 0;
                 quantity_fraction = parseFloat($(`#input-quantity-fraction-${id}`).val()) || 0;
+                discount_fraction = parseFloat($(`#input-discount-fraction-${id}`).val()) || 0;
             }
 
             let total_stock_in_fractions;
@@ -726,7 +798,7 @@
 
             if (requested_fractions > total_stock_in_fractions) {
                 toastr.warning('La cantidad solicitada excede el stock disponible.', 'Stock Insuficiente');
-                
+
                 let max_units = Math.floor(total_stock_in_fractions / (product.dispensedQuantity || 1));
                 let remaining_fractions_for_max = total_stock_in_fractions % (product.dispensedQuantity || 1);
 
@@ -734,19 +806,44 @@
                 if (product.dispensed === 'Fraccionado') {
                     $(`#input-quantity-fraction-${id}`).val(remaining_fractions_for_max);
                 }
-                // $(`#input-quantity-fraction-${id}`).val(remaining_fractions_for_max);
 
                 quantity_unit = parseFloat($(`#input-quantity-unit-${id}`).val()) || 0;
                 quantity_fraction = parseFloat($(`#input-quantity-fraction-${id}`).val()) || 0;
             }
             // --- FIN: Lógica de validación de stock mejorada ---
 
-            let subtotal_unit = price_unit * quantity_unit;
+            // Validar que el descuento no exceda el bruto de la línea
+            let bruto_unit = price_unit * quantity_unit;
+            if (discount_unit > bruto_unit) {
+                discount_unit = bruto_unit;
+                $(`#input-discount-unit-${id}`).val(discount_unit.toFixed(2));
+            }
+
+            let subtotal_unit = Math.max(0, bruto_unit - discount_unit);
+            $(`#label-bruto-unit-${id}`).text(bruto_unit.toFixed(2));
+            if (discount_unit > 0) {
+                $(`#label-dto-unit-${id}`).text(discount_unit.toFixed(2));
+                $(`#discount-unit-display-${id}`).css('display', 'flex');
+            } else {
+                $(`#discount-unit-display-${id}`).hide();
+            }
             $(`#label-subtotal-unit-${id}`).text(subtotal_unit.toFixed(2));
 
             let subtotal_fraction = 0;
             if (product.dispensed === 'Fraccionado' && product.dispensedPrice > 0) {
-                subtotal_fraction = price_fraction * quantity_fraction;
+                let bruto_fraction = price_fraction * quantity_fraction;
+                if (discount_fraction > bruto_fraction) {
+                    discount_fraction = bruto_fraction;
+                    $(`#input-discount-fraction-${id}`).val(discount_fraction.toFixed(2));
+                }
+                subtotal_fraction = Math.max(0, bruto_fraction - discount_fraction);
+                $(`#label-bruto-fraction-${id}`).text(bruto_fraction.toFixed(2));
+                if (discount_fraction > 0) {
+                    $(`#label-dto-fraction-${id}`).text(discount_fraction.toFixed(2));
+                    $(`#discount-fraction-display-${id}`).css('display', 'flex');
+                } else {
+                    $(`#discount-fraction-display-${id}`).hide();
+                }
                 $(`#label-subtotal-fraction-${id}`).text(subtotal_fraction.toFixed(2));
             }
 

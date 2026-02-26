@@ -24,6 +24,7 @@ class SaleDetail extends Model
         'price',
         'quantity',
         'amount',
+        'discount',
 
         'registerUser_id',
         'registerRole',

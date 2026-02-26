@@ -79,17 +79,21 @@ class SaleController extends Controller
             }
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
-                    $amountItems = $amountItems + ($value['quantity_unit'] * $value['price_unit']);
+                    $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
+                    $subtotal_unit = ($value['quantity_unit'] * $value['price_unit']) - $discount_unit;
+                    $amountItems = $amountItems + max(0, $subtotal_unit);
                 }
                 if(isset($value['quantity_fraction']) && isset($value['price_fraction']))
                 {
                     if($value['quantity_fraction'] > 0 && $value['price_fraction'] > 0){
-                        $amountItems = $amountItems + ($value['quantity_fraction'] * $value['price_fraction']);
+                        $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
+                        $subtotal_fraction = ($value['quantity_fraction'] * $value['price_fraction']) - $discount_fraction;
+                        $amountItems = $amountItems + max(0, $subtotal_fraction);
                     }
                 }
             }
-        } 
-        
+        }
+
         $amountTotal = $amountItems;
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
@@ -162,6 +166,8 @@ class SaleController extends Controller
 
                 // Lógica para venta de unidades enteras
                 if ($quantity_unit > 0) {
+                    $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
+                    $amount_unit = max(0, ($value['price_unit'] * $quantity_unit) - $discount_unit);
                     SaleDetail::create([
                         'sale_id' => $sale->id,
                         'itemStock_id' => $itemStock->id,
@@ -170,42 +176,39 @@ class SaleController extends Controller
                         'pricePurchase' => $itemStock->pricePurchase,
                         'price' => $value['price_unit'],
                         'quantity' => $quantity_unit,
-                        'amount' => $value['price_unit'] * $quantity_unit,
+                        'discount' => $discount_unit,
+                        'amount' => $amount_unit,
                     ]);
 
                     $itemStock->decrement('stock', $quantity_unit);
                 }
 
-                // return $request;
-
                 // Lógica para venta de fracciones
                 if ($quantity_fraction > 0) {
                     // Obtener el total de fracciones vendidas ANTES de la venta actual
                     $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
-                    // return $fractions_sold_before;
-                        
+
                     // Calcular las unidades "abiertas" después de esta venta
                     $fractions_sold_after = $fractions_sold_before + $quantity_fraction;
-                    // return $fractions_sold_after;
-                    // $opened_units_after = $fractions_sold_after / $itemStock->dispensedQuantity;                        
                     $opened_units_after = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-                        
+
                     if($opened_units_after > $itemStock->stock){
                         DB::rollBack();
                         return  redirect()->route('sales.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error'])->withInput();
                     }
-    
+
                     // Si la venta de esta fracción provocó que se completara y "abriera" una nueva unidad, descontamos del stock principal
                     if ($itemStock->stock == $opened_units_after) {
                         $itemStock->decrement('stock', $opened_units_after);
                     }
 
-
+                    $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
+                    $amount_fraction = max(0, ($value['price_fraction'] * $quantity_fraction) - $discount_fraction);
                     $itemStockFraction = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity' => $quantity_fraction,
                         'price' => $value['price_fraction'],
-                        'amount' => $value['price_fraction'] * $quantity_fraction,
+                        'amount' => $amount_fraction,
                     ]);
                     SaleDetail::create([
                         'sale_id' => $sale->id,
@@ -216,7 +219,8 @@ class SaleController extends Controller
                         'pricePurchase' => $itemStock->pricePurchase,
                         'price' => $value['price_fraction'],
                         'quantity' => $quantity_fraction,
-                        'amount' => $value['price_fraction'] * $quantity_fraction,
+                        'discount' => $discount_fraction,
+                        'amount' => $amount_fraction,
                     ]);
                 }
             }
@@ -305,16 +309,20 @@ class SaleController extends Controller
             }
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
-                    $amountItems = $amountItems + ($value['quantity_unit'] * $value['price_unit']);
+                    $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
+                    $subtotal_unit = ($value['quantity_unit'] * $value['price_unit']) - $discount_unit;
+                    $amountItems = $amountItems + max(0, $subtotal_unit);
                 }
                 if(isset($value['quantity_fraction']) && isset($value['price_fraction']))
                 {
                     if($value['quantity_fraction'] > 0 && $value['price_fraction'] > 0){
-                        $amountItems = $amountItems + ($value['quantity_fraction'] * $value['price_fraction']);
+                        $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
+                        $subtotal_fraction = ($value['quantity_fraction'] * $value['price_fraction']) - $discount_fraction;
+                        $amountItems = $amountItems + max(0, $subtotal_fraction);
                     }
                 }
             }
-        } 
+        }
         $amountTotal = $amountItems;
 
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
@@ -385,6 +393,8 @@ class SaleController extends Controller
 
                 // Venta de Unidades
                 if ($quantity_unit > 0) {
+                    $discount_unit = isset($value['discount_unit']) ? floatval($value['discount_unit']) : 0;
+                    $amount_unit = max(0, ($value['price_unit'] * $quantity_unit) - $discount_unit);
                     SaleDetail::create([
                         'sale_id' => $sale->id,
                         'itemStock_id' => $itemStock->id,
@@ -393,26 +403,22 @@ class SaleController extends Controller
                         'pricePurchase' => $itemStock->pricePurchase,
                         'price' => $value['price_unit'],
                         'quantity' => $quantity_unit,
-                        'amount' => $value['price_unit'] * $quantity_unit,
+                        'discount' => $discount_unit,
+                        'amount' => $amount_unit,
                     ]);
 
                     $itemStock->decrement('stock', $quantity_unit);
                 }
 
-
                 // Venta de Fracciones
                 if ($quantity_fraction > 0) {
                     // Lógica para descontar stock si las fracciones completan una unidad
                     $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
-                    // return $fractions_sold_before;
-           
+
                     $fractions_sold_after = $fractions_sold_before + $quantity_fraction;
-                    // return $fractions_sold_after;
-                        
+
                     $opened_units_after = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-                    // return $opened_units_after;
-                        
-                    // return $itemStock->stock;
+
                     if($opened_units_after > $itemStock->stock){
                         DB::rollBack();
                         return  redirect()
@@ -422,11 +428,13 @@ class SaleController extends Controller
                     if ($itemStock->stock == $opened_units_after) {
                         $itemStock->decrement('stock', $opened_units_after);
                     }
+                    $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
+                    $amount_fraction = max(0, ($value['price_fraction'] * $quantity_fraction) - $discount_fraction);
                     $itemStockFraction = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity' => $quantity_fraction,
                         'price' => $value['price_fraction'],
-                        'amount' => $value['price_fraction'] * $quantity_fraction,
+                        'amount' => $amount_fraction,
                     ]);
 
                     SaleDetail::create([
@@ -438,7 +446,8 @@ class SaleController extends Controller
                         'pricePurchase' => $itemStock->pricePurchase,
                         'price' => $value['price_fraction'],
                         'quantity' => $quantity_fraction,
-                        'amount' => $value['price_fraction'] * $quantity_fraction,
+                        'discount' => $discount_fraction,
+                        'amount' => $amount_fraction,
                     ]);
                 }
 
