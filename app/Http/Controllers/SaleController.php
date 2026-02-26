@@ -11,6 +11,7 @@ use App\Models\ItemStockFraction;
 use App\Models\SaleDetail;
 use App\Models\SaleTransaction;
 use App\Models\Transaction;
+use Illuminate\Support\Carbon;
 
 class SaleController extends Controller
 {
@@ -62,7 +63,6 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-        return $request;
         $this->custom_authorize('add_sales');
         if(!$request->products)
         {
@@ -115,12 +115,12 @@ class SaleController extends Controller
                 ->with(['message' => 'Monto Incorrecto.', 'alert-type' => 'error']);
         }
 
-        $cashier = $this->cashier(null,'user_id = "'.Auth::user()->id.'"', 'status = "Abierta"');
-        if (!$cashier) {
-            return redirect()
-                ->route('sales.index')
-                ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
-        }
+        // $cashier = $this->cashier(null,'user_id = "'.Auth::user()->id.'"', 'status = "Abierta"');
+        // if (!$cashier) {
+        //     return redirect()
+        //         ->route('sales.index')
+        //         ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
+        // }
 
         DB::beginTransaction();
         try {
@@ -129,7 +129,7 @@ class SaleController extends Controller
             ]);
             $sale = Sale::create([
                 'person_id' => $request->person_id,
-                'cashier_id' => $cashier->id,
+                // 'cashier_id' => $cashier->id,
 
                 'code' => $this->generarNumeroFactura($request->typeSale),
                 'typeSale' => $request->typeSale,
@@ -252,6 +252,7 @@ class SaleController extends Controller
                 ->with(['message' => 'Registrado exitosamente.', 'alert-type' => 'success']);
         } catch (\Throwable $e) {
             DB::rollBack();
+            return 0;
             return redirect()
                 ->route('sales.index')
                 ->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);

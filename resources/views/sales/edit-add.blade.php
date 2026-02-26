@@ -50,20 +50,21 @@
                         .row-layout { display: flex; align-items: flex-start; flex-wrap: wrap; }
 
                         /* Method cards */
-                        .payment-method-group { display: flex; gap: 10px; margin-top: 6px; }
+                        .payment-method-group { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
                         .payment-method-card {
-                            flex: 1; border: 2px solid #ddd; border-radius: 8px;
-                            padding: 12px 6px; text-align: center; cursor: pointer;
+                            flex: 1; border: 1px solid #ddd; border-radius: 6px;
+                            padding: 5px 7px; cursor: pointer; white-space: nowrap;
+                            display: flex; align-items: center; justify-content: center; gap: 5px;
                             transition: border-color .15s, background .15s, box-shadow .15s;
-                            background: #fff;
+                            background: #fff; min-width: 0;
                         }
                         .payment-method-card:hover { border-color: #3498db; background: #f0f7ff; }
                         .payment-method-card.active {
                             border-color: #3498db; background: #eaf4fd;
-                            box-shadow: 0 2px 8px rgba(52,152,219,.18);
+                            box-shadow: 0 1px 4px rgba(52,152,219,.2);
                         }
-                        .pm-icon { font-size: 20px; color: #bdc3c7; margin-bottom: 5px; display: block; transition: color .15s; }
-                        .pm-label { font-size: 11px; color: #7f8c8d; font-weight: 600; transition: color .15s; }
+                        .pm-icon { font-size: 13px; color: #bdc3c7; margin: 0; transition: color .15s; }
+                        .pm-label { font-size: 10px; color: #7f8c8d; font-weight: 600; transition: color .15s; }
                         .payment-method-card.active .pm-icon  { color: #3498db; }
                         .payment-method-card.active .pm-label { color: #2980b9; font-weight: 700; }
 
