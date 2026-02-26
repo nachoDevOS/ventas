@@ -267,9 +267,9 @@
                                     <table id="dataTable" class="table table-bordered table-hover">
                                         <thead>
                                             <tr>
-                                                <th style="width: 5%">N&deg;</th>
+                                                <th style="text-align: center; width: 5%">N&deg;</th>
                                                 <th style="">Detalles</th>
-                                                <th style="text-align: center; width:15%">Precio</th>
+                                                <th style="text-align: center; width:12%">Precio</th>
                                                 <th style="text-align: center; width:8%">Cantidad</th>
                                                 <th style="text-align: center; width:12%">Descuento</th>
                                                 <th style="text-align: center; width:15%">Subtotal</th>
