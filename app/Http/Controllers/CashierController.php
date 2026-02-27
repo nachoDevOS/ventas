@@ -61,9 +61,6 @@ class CashierController extends Controller
         $cashier = $this->cashier(null,'user_id = "'.$request->user_id.'"', '(status = "Abierta" or status = "Apertura Pendiente" or status = "Cierre Pendiente")');
 
         if ($cashier) {
-            // return redirect()
-            //     ->route('cashiers.index')
-            //     ->with(['message' => 'El usuario seleccionado tiene una caja que no ha sido cerrada.', 'alert-type' => 'warning']);
             return redirect()->back()->withInput()->with(['message' => 'La persona seleccionada cuenta con una caja activa...', 'alert-type' => 'error']);
         }
 
@@ -103,8 +100,27 @@ class CashierController extends Controller
             return redirect()->route('cashiers.index')->with(['message' => 'Registrado exitosamente.', 'alert-type' => 'success']);
         } catch (\Throwable $th) {
             DB::rollBack();
-            // $this->logError($th, $request);
             return redirect()->route('cashiers.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
         }
+    }
+
+    public function print_open($id){
+        
+        $cashier = Cashier::with(['user',
+            'movements' => function($q){
+                $q->where('deleted_at', NULL)
+                ->with(['details.detailCashes']);
+            }])
+            ->where('id', $id)
+        ->first();
+
+      
+        return view('cashiers.print-open', compact('cashier'));
+    }
+
+    public function show($id)
+    {
+        $cashier = $this->cashier('id = "'.$id.'"', null, null);        
+        return view('cashiers.read' , compact('cashier'));
     }
 }

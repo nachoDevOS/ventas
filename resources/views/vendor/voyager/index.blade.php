@@ -1,24 +1,61 @@
 @extends('voyager::master')
 
 @section('page_header')
+
+    @php
+        $meses = [
+            '',
+            'Enero',
+            'Febrero',
+            'Marzo',
+            'Abril',
+            'Mayo',
+            'Junio',
+            'Julio',
+            'Agosto',
+            'Septiembre',
+            'Octubre',
+            'Noviembre',
+            'Diciembre',
+        ];
+    @endphp
+
     <div class="page-content container-fluid">
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-bordered">
-                    <div class="panel-body">
+                    <div class="panel-body" style="overflow: visible;">
                         <div class="row">
                             <div class="col-md-8">
                                 <h2>Hola, {{ Auth::user()->name }}</h2>
-                                <p class="text-muted">Resumen de rendimiento - {{ now()->format('d F Y') }}</p>
+                                <p class="text-muted">Resumen de rendimiento -
+                                    {{ date('d') . ' de ' . $meses[intval(date('m'))] . ' ' . date('Y') }}</p>
                             </div>
                             <div class="col-md-4 text-right">
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-primary" id="refresh-dashboard">
-                                        <i class="voyager-refresh"></i> Actualizar
-                                    </button>
+                                {{-- <a href="{{ route('proformas.index') }}" class="btn btn-danger" style="margin-right: 10px;">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i> Proforma
+                                </a> --}}
+                                <div class="btn-group">                              
+                                    <div id="status" style="display: inline-block; margin-right: 10px;">
+                                        <span>Obteniendo estado...</span>
+                                    </div>
                                 </div>
+                                {{-- <div class="btn-group">
+                                    <button type="button" class="btn btn-primary" id="filter-button">
+                                        <i class="voyager-refresh"></i> Todo
+                                    </button>
+                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu" id="filter-menu">
+                                        <li><a href="#" data-range="Todo">Todo</a></li>
+                                        <li><a href="#" data-range="Desayuno">Desayuno</a></li>
+                                        <li><a href="#" data-range="Almuerzo">Almuerzo</a></li>
+                                        <li><a href="#" data-range="Cena">Cena</a></li>
+                                    </ul>
+                                </div> --}}
                             </div>
-                        </div>                        
+                        </div>
                     </div>
                 </div>
             </div>
@@ -27,9 +64,6 @@
 @stop
 
 @section('content')
-    @php
-        $meses = array('', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre');       
-    @endphp
     
     <div class="page-content container-fluid">
         @include('voyager::alerts')
@@ -37,355 +71,496 @@
 
         <!-- KPI Cards -->
         <div class="row">
-            <div class="col-md-3">
-                <div class="panel panel-bordered dashboard-kpi">
-                    <div class="panel-body text-center">
+            {{-- <div class="col-md-3 col-sm-6">
+                <a href="{{ route('sales.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
+                    <div class="panel-body">
                         <div class="kpi-icon">
-                            <i class="voyager-dollar"></i>
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
                         </div>
-                        <h3 class="kpi-value">$24,580</h3>
-                        <p class="kpi-label">Ventas Totales</p>
-                        <div class="kpi-trend trend-up">
-                            <i class="voyager-up"></i> 12.5%
+                        <div class="kpi-content">
+                            <p class="kpi-label">Ventas Total del Día</p>
+                            <h3 class="kpi-value">Bs. {{ number_format($global_index['amountDaytotal'], 2, ',', '.') }}</h3>
+                        </div>
+                    </div>
+                </a>
+            </div> --}}
+            <div class="col-md-3 col-sm-6">
+                <div class="panel panel-bordered dashboard-kpi">
+                    <div class="panel-body">
+                        <div class="kpi-icon">
+                            <i class="fa-regular fa-bell"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Recordatorios de hoy</p>
+                            <h3 class="kpi-value">{{ $global_index['reminder'] }}</h3>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="panel panel-bordered dashboard-kpi">
-                    <div class="panel-body text-center">
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ route('voyager.pets.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
+                    <div class="panel-body">
                         <div class="kpi-icon">
-                            <i class="voyager-bag"></i>
+                            <i class="voyager-paw"></i>
                         </div>
-                        <h3 class="kpi-value">328</h3>
-                        <p class="kpi-label">Pedidos Hoy</p>
-                        <div class="kpi-trend trend-up">
-                            <i class="voyager-up"></i> 5.2%
+                        <div class="kpi-content">
+                            <p class="kpi-label">Mascotas</p>
+                            <h3 class="kpi-value">{{ $global_index['pet']}}</h3>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
-            <div class="col-md-3">
-                <div class="panel panel-bordered dashboard-kpi">
-                    <div class="panel-body text-center">
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ route('voyager.people.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
+                    <div class="panel-body">
                         <div class="kpi-icon">
-                            <i class="voyager-person"></i>
+                            <i class="fa-solid fa-users"></i>
                         </div>
-                        <h3 class="kpi-value">42</h3>
-                        <p class="kpi-label">Nuevos Clientes</p>
-                        <div class="kpi-trend trend-down">
-                            <i class="voyager-down"></i> 3.1%
+                        <div class="kpi-content">
+                            <p class="kpi-label">Clientes</p>
+                            <h3 class="kpi-value">{{ $global_index['customer'] }}</h3>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-sm-6">
                 <div class="panel panel-bordered dashboard-kpi">
-                    <div class="panel-body text-center">
+                    <div class="panel-body">
                         <div class="kpi-icon">
-                            <i class="voyager-bar-chart"></i>
+                            <i class="fa-solid fa-cake-candles"></i>
                         </div>
-                        <h3 class="kpi-value">$78.50</h3>
-                        <p class="kpi-label">Ticket Promedio</p>
-                        <div class="kpi-trend trend-up">
-                            <i class="voyager-up"></i> 8.7%
+                        <div class="kpi-content">
+                            <p class="kpi-label">Cumpleaños de Hoy</p>
+                            <h3 class="kpi-value">{{ $global_index['todayBirthdaysCount'] }}</h3>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <!-- Gráfico de ventas mensuales con controles -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <div class="panel-title-container">
-                            <h3 class="panel-title">Ventas Mensuales</h3>
-                            <div class="chart-controls">
-                                <select class="form-control chart-type-selector" data-chart="ventasMensualesChart">
-                                    <option value="bar">Barras</option>
-                                    <option value="line">Líneas</option>
-                                </select>
-                                <button class="btn btn-sm btn-default chart-export" data-chart="ventasMensualesChart">
-                                    <i class="voyager-download"></i>
-                                </button>
+        @if ($globalFuntion_cashier)
+            @if ($globalFuntion_cashier->status == 'Abierta' || $globalFuntion_cashier->status == 'Apertura Pendiente')
+
+                @if ($globalFuntion_cashier->status == 'Abierta')
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-bordered">
+                                <div class="panel-body">
+                              
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h2 id="h2"><i class="fa-solid fa-wallet"></i>
+                                                {{ $globalFuntion_cashier->title }}</h2>
+                                        </div>
+                                        @if ($globalFuntion_cashier->status == 'Abierta')
+                                            <div class="col-md-6 text-right">
+                                                <a href="#" data-toggle="modal" data-target="#modal-create-expense"
+                                                    title="Agregar Gastos" class="btn btn-success">Gastos <i
+                                                        class="fa-solid fa-money-bill-transfer"></i></a>
+                                                {{-- <a  href="#" data-toggle="modal" data-target="#modal_transfer_moneyCashier" title="Transferir Dinero" class="btn btn-success">Traspaso <i class="fa-solid fa-money-bill-transfer"></i></a> --}}
+
+                                                <a href="{{ route('cashiers.close', ['cashier' => $globalFuntion_cashier->id]) }}"
+                                                    class="btn btn-danger">Cerrar Caja <i class="voyager-lock"></i></a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="row" style="margin-top: 30px;">
+                                        <div class="col-md-7">
+                                            <div class="row">
+                                                <div class="col-xs-4">
+                                                    <div class="panel panel-bordered" style="border: 1px solid #f1f1f1; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                                        <div class="panel-body text-center" style="padding: 15px 5px;">
+                                                            <small class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Asignado</small>
+                                                            <h4 style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['cashierIn'], 2, ',', '.') }} <small>Bs.</small></h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-4">
+                                                    <div class="panel panel-bordered" style="border: 1px solid #f1f1f1; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                                        <div class="panel-body text-center" style="padding: 15px 5px;">
+                                                            <small class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Efectivo</small>
+                                                            <h4 class="text-success" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountCashier'], 2, ',', '.') }} <small>Bs.</small></h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-4">
+                                                    <div class="panel panel-bordered" style="border: 1px solid #f1f1f1; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                                        <div class="panel-body text-center" style="padding: 15px 5px;">
+                                                            <small class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Qr</small>
+                                                            <h4 class="text-info" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountQr'], 2, ',', '.') }} <small>Bs.</small></h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div style="margin-top: 20px;">
+                                                <h5 class="text-muted" style="margin-bottom: 15px; font-weight: 600; text-transform: uppercase; font-size: 12px;">Detalle de Movimientos</h5>
+                                                <table class="table table-hover">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-arrow-trend-up text-success" style="margin-right: 10px;"></i> Ingreso Efectivo</td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentEfectivo'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-qrcode text-info" style="margin-right: 10px;"></i> Ingreso Qr</td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentQr'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-arrow-trend-down text-danger" style="margin-right: 10px;"></i> Egreso Efectivo</td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentEfectivoEgreso'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-qrcode text-danger" style="margin-right: 10px;"></i> Egreso Qr</td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentQrEgreso'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div style="height: 300px; position: relative;">
+                                                <canvas id="myChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="ventasMensualesChart" height="250"></canvas>
-                        </div>
-                        <div class="chart-summary">
-                            <div class="summary-item">
-                                <span class="summary-label">Total Mes:</span>
-                                <span class="summary-value">$2,580,000</span>
+                    @include('partials.modal-registerExpense')
+
+
+                @else
+                    <div class="row" id="rowCashierOpen">
+                        <div class="col-md-12">
+                            <div class="panel panel-bordered">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h2 id="h2"><i class="fa-solid fa-wallet"></i>
+                                                {{ $globalFuntion_cashier->title }}</h2>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6" style="margin-top: 50px">
+                                            <table class="table table-hover" id="dataTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Corte</th>
+                                                        <th>Cantidad</th>
+                                                        <th>Sub Total</th>
+                                                    </tr>
+                                                </thead>
+                                                @php
+                                                    $cash = [
+                                                        '200',
+                                                        '100',
+                                                        '50',
+                                                        '20',
+                                                        '10',
+                                                        '5',
+                                                        '2',
+                                                        '1',
+                                                        '0.5',
+                                                        // '0.2',
+                                                        // '0.1',
+                                                    ];
+                                                    $total = 0;
+                                                @endphp
+                                                <tbody>
+                                                    @foreach ($cash as $item)
+                                                        <tr>
+                                                            <td>
+                                                                <h4 style="margin: 0px"><img
+                                                                        src=" {{ url('images/cash/' . $item . '.jpg') }} "
+                                                                        alt="{{ $item }} Bs." width="70px">
+                                                                    {{ $item }} Bs. </h4>
+                                                            </td>
+                                                            <td>
+                                                                {{-- @php
+                                                                    $details = null;
+                                                                    if ($globalFuntion_cashier->vault_detail) {
+                                                                        $details = $globalFuntion_cashier->vault_detail->cash
+                                                                            ->where('cash_value', $item)
+                                                                            ->first();
+                                                                    }
+                                                                @endphp
+                                                                {{ $details ? $details->quantity : 0 }} --}}
+
+
+
+                                                                @php                                                    
+                                                                    // 1. Encontrar el detalle de cierre
+                                                                    $open_detail = $globalFuntion_cashier->details->where('type', 'Apertura')->first();
+                                                                    // 2. Encontrar el corte de billete específico dentro de los detalles del cierre
+                                                                    $cash_detail = $open_detail ? $open_detail->detailCashes->where('cash_value', $item)->first() : null;
+                                                                    $quantity = $cash_detail ? $cash_detail->quantity : 0;
+                                                                @endphp
+                                                                {{ $quantity }}
+                                                            </td>
+                                                            <td>
+                                                                {{ number_format($quantity * $item, 2, ',', '.') }}
+                                                                <input type="hidden" name="cash_value[]" value="{{ $item }}">
+                                                                <input type="hidden" name="quantity[]" value="{{ $quantity }}">
+                                                            </td>
+                                                            @php
+                                                                $total += $quantity * $item;
+                                                            @endphp
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <br>
+                                            <div class="alert alert-info">
+                                                <strong>Información:</strong>
+                                                <p>Si la cantidad de de cortes de billetes coincide con la cantidad
+                                                    entregada por parte del administrador(a) de vóbeda, acepta la apertura
+                                                    de caja, caso contrario puedes rechazar la apertura.</p>
+                                            </div>
+                                            <br>
+                                            <h2 id="h3" class="text-right">Total en caja: Bs.
+                                                {{ number_format($total, 2, ',', '.') }} </h2>
+                                            <br>
+                                            <div class="text-right">
+                                                <button type="button" data-toggle="modal"
+                                                    data-target="#refuse_cashier-modal" class="btn btn-danger">Rechazar 
+                                                    apertura <i class="voyager-x"></i></button>
+                                                <button type="button" data-toggle="modal" data-target="#open_cashier-modal"
+                                                    class="btn btn-success">Aceptar apertura <i
+                                                        class="voyager-key"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Crecimiento:</span>
-                                <span class="summary-value trend-up">+12.5%</span>
+                        </div>
+                    </div>
+
+                    {{-- Aceptar apertura de caja --}}
+                    <form class="form-edit-add" action="{{ route('cashiers.change.status', ['cashier' => $globalFuntion_cashier->id]) }}"
+                        method="post">
+                        @csrf
+                        <input type="hidden" name="status" value="Abierta">
+                        <div class="modal fade" tabindex="-1" id="open_cashier-modal" role="dialog">
+                            <div class="modal-dialog modal-success">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span
+                                                aria-hidden="true">&times;</span></button>
+                                        <h4 class="modal-title"><i class="fa-solid fa-wallet"></i> Aceptar apertura de caja
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="text-muted"></p>
+                                        <small>Esta a punto de aceptar que posee todos los cortes de billetes descritos en
+                                            la lista, ¿Desea continuar?</small>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-success btn-submit">Si, aceptar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    {{-- Rechazar apertura de caja --}}
+                    <form class="form-edit-add" action="{{ route('cashiers.change.status', ['cashier' => $globalFuntion_cashier->id]) }}"
+                        method="post">
+                        @csrf
+                        <input type="hidden" name="status" value="Cerrada">
+                        <div class="modal modal-danger fade" tabindex="-1" id="refuse_cashier-modal" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                            aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                                        <h4 class="modal-title"><i class="fa-solid fa-wallet"></i> Rechazar apertura de
+                                            caja</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <small>Esta a punto de rechazar la apertura de caja, ¿Desea continuar?</small>
+                                        <p class="text-muted"></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger btn-submit">Si, rechazar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                @endif
+            @else
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-bordered">
+                            <div class="panel-body text-center">
+                                <h2>Tienes una caja esperando por confimación de cierre</h2>
+                                <a href="#" style="margin: 0px" data-toggle="modal"
+                                    data-target="#cashier-revert-modal" class="btn btn-success"><i
+                                        class="voyager-key"></i> Reabrir caja</a>
+                                <a href="{{ route('cashiers.print', $globalFuntion_cashier->id) }}" style="margin: 0px"
+                                    class="btn btn-danger" target="_blank"><i class="fa fa-print"></i> Imprimir</a>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Gráfico de productos más vendidos con filtros -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <div class="panel-title-container">
-                            <h3 class="panel-title">Productos Más Vendidos</h3>
-                            <div class="chart-controls">
-                                <select class="form-control chart-period-selector" data-chart="topProductosChart">
-                                    <option value="week">Esta semana</option>
-                                    <option value="month" selected>Este mes</option>
-                                    <option value="year">Este año</option>
-                                </select>
+                <form class="form-edit-add" action="{{ route('cashiers.close.revert', ['cashier' => $globalFuntion_cashier->id]) }}" method="post">
+                    @csrf
+                    <div class="modal fade" tabindex="-1" id="cashier-revert-modal" role="dialog">
+                        <div class="modal-dialog modal-success">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span
+                                            aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title"><i class="voyager-key"></i> Reabrir Caja</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted">Si reabre la caja deberá realizar el arqueo nuevamente, ¿Desea
+                                        continuar?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-success btn-submit">Si, reabrir</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="topProductosChart" height="250"></canvas>
-                        </div>
-                        <div class="chart-legend-detailed">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: rgba(255, 99, 132, 0.7)"></span>
-                                <span class="legend-label">Hamburguesa</span>
-                                <span class="legend-value">1,200 unidades</span>
-                            </div>
+                </form>
+            @endif
+        @else
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-bordered">
+                        <div class="panel-body">
+                            <h1 class="text-center">No tienes caja abierta</h1>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
 
-        <div class="row">
-            <!-- Gráfico de ventas por día de la semana interactivo -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <div class="panel-title-container">
-                            <h3 class="panel-title">Ventas por Día de la Semana</h3>
-                            <div class="chart-controls">
-                                <button class="btn btn-sm btn-default toggle-dataset" data-chart="ventasDiasChart">
-                                    <i class="voyager-eye"></i> Alternar Datos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="ventasDiasChart" height="250"></canvas>
-                        </div>
-                        <div class="chart-tooltip-info">
-                            <i class="voyager-info"></i> Haz clic en los elementos para ver detalles
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico de comparación anual mejorado -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <div class="panel-title-container">
-                            <h3 class="panel-title">Comparación Anual</h3>
-                            <div class="chart-controls">
-                                <select class="form-control year-selector" data-chart="comparacionAnualChart">
-                                    <option value="2021">2021-2022</option>
-                                    <option value="2022" selected>2022-2023</option>
-                                    <option value="2023">2023-2024</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="comparacionAnualChart" height="250"></canvas>
-                        </div>
-                        <div class="comparison-stats">
-                            <div class="stat-item">
-                                <span class="stat-year">2022</span>
-                                <span class="stat-total">$2,340,000</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-year">2023</span>
-                                <span class="stat-total">$2,580,000</span>
-                                <span class="stat-difference trend-up">+$240,000</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Nuevos gráficos agregados -->
-        <div class="row">
-            <!-- Gráfico de ventas en tiempo real -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <div class="panel-title-container">
-                            <h3 class="panel-title">Ventas en Tiempo Real - Hoy</h3>
-                            <div class="chart-controls">
-                                <button class="btn btn-sm btn-success" id="start-realtime">
-                                    <i class="voyager-play"></i> Iniciar
-                                </button>
-                                <button class="btn btn-sm btn-danger" id="stop-realtime">
-                                    <i class="voyager-pause"></i> Pausar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="ventasTiempoRealChart" height="200"></canvas>
-                        </div>
-                        <div class="realtime-info">
-                            <span class="realtime-label">Actualizado:</span>
-                            <span class="realtime-time" id="lastUpdateTime">{{ now()->format('H:i:s') }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico de métricas de rendimiento -->
-            <div class="col-md-6">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Métricas de Rendimiento</h3>
-                    </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="metricasRendimientoChart" height="200"></canvas>
-                        </div>
-                        <div class="metrics-radar-info">
-                            <div class="metric-score">
-                                <span class="score-value">85%</span>
-                                <span class="score-label">Puntuación General</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico de embudo de conversión -->
         <div class="row">
             <div class="col-md-12">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Embudo de Conversión</h3>
-                    </div>
-                    <div class="panel-body">
-                        <div class="chart-container">
-                            <canvas id="embudoConversionChart" height="150"></canvas>
-                        </div>
-                        <div class="funnel-stats">
-                            <div class="funnel-stage">
-                                <span class="stage-name">Visitantes</span>
-                                <span class="stage-value">10,000</span>
-                                <span class="stage-rate">100%</span>
+                <div class="panel">
+                    <div class="panel-body" style="padding: 0;">
+                        <ul class="nav nav-tabs" style="padding: 15px 15px 0;">
+                            <li class="active"><a data-toggle="tab" href="#stats_tab">Estadísticas</a></li>
+                            <li><a data-toggle="tab" href="#birthdays_tab">Próximos Cumpleaños</a></li>
+                            <li><a data-toggle="tab" href="#reminders_tab">Recordatorios</a></li>
+                        </ul>
+                        <div class="tab-content" style="padding: 15px;">
+                            <div id="stats_tab" class="tab-pane fade in active">
+                                <div class="row">
+                                    <!-- Gráfico de productos más vendidos -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-bordered">
+                                            <div class="panel-heading">
+                                                <div class="panel-title-container">
+                                                    <h3 class="panel-title">5 Productos Más Vendidos del Día</h3>
+                                                    <div class="chart-controls">
+                                                        <select class="form-control chart-type-selector" data-chart="topProductosChart">
+                                                            <option value="doughnut" selected>Dona</option>
+                                                            <option value="bar">Barras</option>
+                                                        </select>
+                                                        <button class="btn btn-sm btn-default chart-export" data-chart="topProductosChart" title="Descargar">
+                                                            <i class="voyager-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="chart-container">
+                                                    <canvas id="topProductosChart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Gráfico de ventas por día de la semana -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-bordered">
+                                            <div class="panel-heading">
+                                                <div class="panel-title-container">
+                                                    <h3 class="panel-title">Ventas por Día de la Semana</h3>
+                                                    <div class="chart-controls">
+                                                        <select class="form-control chart-type-selector" data-chart="ventasDiasChart">
+                                                            <option value="bar" selected>Barras</option>
+                                                            <option value="line">Líneas</option>
+                                                        </select>
+                                                        <button class="btn btn-sm btn-default chart-export" data-chart="ventasDiasChart" title="Descargar">
+                                                            <i class="voyager-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="chart-container">
+                                                    <canvas id="ventasDiasChart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <!-- Gráfico de ventas mensuales -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-bordered">
+                                            <div class="panel-heading">
+                                                <div class="panel-title-container">
+                                                    <h3 class="panel-title">Ventas Mensuales</h3>
+                                                    <div class="chart-controls">
+                                                        <select class="form-control chart-type-selector" data-chart="ventasMensualesChart">
+                                                            <option value="bar" selected>Barras</option>
+                                                            <option value="line">Líneas</option>
+                                                        </select>
+                                                        <button class="btn btn-sm btn-default chart-export" data-chart="ventasMensualesChart" title="Descargar">
+                                                            <i class="voyager-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="chart-container">
+                                                    <canvas id="ventasMensualesChart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="funnel-stage">
-                                <span class="stage-name">Carrito</span>
-                                <span class="stage-value">2,500</span>
-                                <span class="stage-rate">25%</span>
+                            <div id="birthdays_tab" class="tab-pane fade">
+                                @include('vendor.voyager.partials.listBirthday')
                             </div>
-                            <div class="funnel-stage">
-                                <span class="stage-name">Checkout</span>
-                                <span class="stage-value">1,200</span>
-                                <span class="stage-rate">12%</span>
-                            </div>
-                            <div class="funnel-stage">
-                                <span class="stage-name">Completado</span>
-                                <span class="stage-value">980</span>
-                                <span class="stage-rate">9.8%</span>
+                            <div id="reminders_tab" class="tab-pane fade">
+                                @include('vendor.voyager.partials.listReminder')
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Tabla de últimos pedidos -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Pedidos Recientes</h3>
+
+        {{-- Modal QR --}}
+    <div class="modal modal-success fade" tabindex="-1" id="qr_modal" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"><i class="voyager-lock"></i> Iniciar sesión</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12 text-center">
+                        <img alt="Código QR" id="qr_code">
                     </div>
-                    <div class="panel-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th># Pedido</th>
-                                        <th>Cliente</th>
-                                        <th>Fecha</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>#12345</td>
-                                        <td>Juan Pérez</td>
-                                        <td>20 Nov 2023</td>
-                                        <td>$125.80</td>
-                                        <td><span class="label label-success">Completado</span></td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#12344</td>
-                                        <td>María García</td>
-                                        <td>20 Nov 2023</td>
-                                        <td>$89.50</td>
-                                        <td><span class="label label-warning">Procesando</span></td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#12343</td>
-                                        <td>Carlos López</td>
-                                        <td>19 Nov 2023</td>
-                                        <td>$210.00</td>
-                                        <td><span class="label label-success">Completado</span></td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#12342</td>
-                                        <td>Ana Martínez</td>
-                                        <td>19 Nov 2023</td>
-                                        <td>$56.90</td>
-                                        <td><span class="label label-danger">Cancelado</span></td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#12341</td>
-                                        <td>Pedro Sánchez</td>
-                                        <td>18 Nov 2023</td>
-                                        <td>$178.30</td>
-                                        <td><span class="label label-success">Completado</span></td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -393,45 +568,154 @@
 @stop
 
 @section('css')
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .dashboard-kpi {
-            transition: all 0.3s ease;
+        :root {
+            --primary-color: #4a90e2; /* Un azul más suave y moderno */
+            --secondary-color: #50e3c2; /* Un toque de menta fresca */
+            --text-color: #333;
+            --text-color-light: #777;
+            --background-color: #f4f7f6; /* Un fondo ligeramente gris */
+            --panel-bg-color: #ffffff;
+            --border-color: #e8e8e8;
+            --shadow-color: rgba(0, 0, 0, 0.05);
         }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .page-content.container-fluid {
+            background-color: transparent;
+        }
+
+        .panel {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            background-color: var(--panel-bg-color);
+        }
+
+        .panel-bordered > .panel-heading, .panel-bordered > .panel-body {
+            border-color: var(--border-color);
+        }
+
+        .panel-body {
+            padding: 25px;
+        }
+        
+        /* Header */
+        .page-content .panel-body h2 {
+            font-weight: 400;
+            color: var(--text-color);
+        }
+        .page-content .panel-body .text-muted {
+            color: var(--text-color-light) !important;
+            font-size: 1rem;
+        }
+
+        /* KPI Cards */
+        .dashboard-kpi {
+            transition: all 0.3s ease-in-out;
+            border-radius: 12px;
+            background: var(--panel-bg-color);
+        }
+
         .dashboard-kpi:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
+
+        .dashboard-kpi .panel-body {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
         .kpi-icon {
-            font-size: 24px;
-            color: #22A7F0;
-            margin-bottom: 10px;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-right: 20px;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: rgba(74, 144, 226, 0.1);
         }
+
+        .kpi-content {
+            flex-grow: 1;
+        }
+
         .kpi-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 10px 0;
+            font-size: 2rem;
+            font-weight: 500;
+            margin: 0;
+            color: var(--text-color);
         }
+
         .kpi-label {
-            color: #6c757d;
-            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-color-light);
+            margin: 0;
         }
-        .kpi-trend {
-            font-size: 12px;
-            font-weight: bold;
+
+        /* Chart Panels */
+        .panel-title {
+            font-weight: 400;
+            font-size: 1.2rem;
         }
-        .trend-up {
-            color: #2ecc71;
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        .trend-down {
-            color: #e74c3c;
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #357abd;
+            border-color: #357abd;
         }
-        .panel-heading .btn-group {
-            margin-top: -5px;
+        .btn-success {
+            border-radius: 8px;
         }
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
+        .btn-danger {
+            border-radius: 8px;
+        }
+
+        /* Cashier section */
+        #h2 {
+            font-weight: 400;
+        }
+        #h2 .fa-wallet {
+            color: var(--primary-color);
+        }
+        
+        table tr td {
+            padding: 10px 5px !important;
+        }
+
+        table small {
+            font-size: 1rem;
+            color: var(--text-color-light);
+        }
+        table h4 {
+            font-weight: 400;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-kpi .panel-body {
+                flex-direction: column;
+                text-align: center;
+            }
+            .kpi-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
         }
         
         /* Nuevos estilos para funcionalidades adicionales */
@@ -450,220 +734,263 @@
             width: auto;
             display: inline-block;
         }
-        .chart-summary {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        .summary-item {
-            text-align: center;
-        }
-        .summary-label {
-            display: block;
-            font-size: 12px;
-            color: #6c757d;
-        }
-        .summary-value {
-            display: block;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .chart-legend-detailed {
-            margin-top: 15px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-            padding: 5px;
-            border-radius: 3px;
-            background: #f8f9fa;
-        }
-        .legend-color {
-            width: 15px;
-            height: 15px;
-            border-radius: 3px;
-            margin-right: 10px;
-        }
-        .legend-label {
-            flex: 1;
-            font-size: 12px;
-        }
-        .legend-value {
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .chart-tooltip-info {
-            text-align: center;
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 10px;
-        }
-        .comparison-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-year {
-            display: block;
-            font-weight: bold;
-        }
-        .stat-total {
-            display: block;
-            font-size: 14px;
-            color: #333;
-        }
-        .stat-difference {
-            display: block;
-            font-size: 12px;
-        }
-        .realtime-info {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        .realtime-time {
-            font-weight: bold;
-            color: #22A7F0;
-        }
-        .metrics-radar-info {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .metric-score {
-            display: inline-block;
-            text-align: center;
-        }
-        .score-value {
-            display: block;
-            font-size: 24px;
-            font-weight: bold;
-            color: #22A7F0;
-        }
-        .score-label {
-            font-size: 12px;
-            color: #6c757d;
-        }
-        .funnel-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-        }
-        .funnel-stage {
-            text-align: center;
-            flex: 1;
-        }
-        .stage-name {
-            display: block;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .stage-value {
-            display: block;
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        .stage-rate {
-            display: block;
-            font-size: 12px;
-            color: #6c757d;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .panel-title-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .chart-controls {
-                margin-top: 10px;
-                width: 100%;
-                justify-content: flex-end;
-            }
-            .chart-summary,
-            .comparison-stats,
-            .funnel-stats {
-                flex-direction: column;
-                gap: 10px;
-            }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
         }
     </style>
 @stop
 
 @section('javascript')
+    <script src="{{ asset('js/qrious.js') }}"></script>
+    {{-- Socket.io --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.js" integrity="sha512-nYuHvSAhY5lFZ4ixSViOwsEKFvlxHMU2NHts1ILuJgOS6ptUmAGt/0i5czIgMOahKZ6JN84YFDA+mCdky7dD8A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        $(document).ready(function () {
+            const serverUrl = "{{ setting('whatsapp.servidores') }}";
+            const sessionId = "{{ setting('whatsapp.session') }}";
+            let isWhatsappOnline = false; // Variable para rastrear el estado
+
+            // Si no hay servidor configurado, no hacemos nada.
+            if (!serverUrl || !sessionId) return;
+
+            // --- Helper Functions ---
+            function updateStatus(status, message) {
+                let html = '';
+                switch (status) {
+                    case 'online':
+                        html = '<button class="btn btn-success">WhatsApp en línea</button>';
+                        isWhatsappOnline = true;
+                        break;
+                    case 'offline':
+                        html = `<button type="button" class="btn btn-danger btn-offline" onclick="login()">${message || 'WhatsApp Fuera de línea'}</button>`;
+                        break;
+                    case 'loading':
+                        html = '<span>Iniciando sesión...</span>';
+                        break;
+                    case 'server_offline':
+                        html = '<b class="text-danger">Servidor fuera de línea</b>';
+                        isWhatsappOnline = false;
+                        break;
+                    default:
+                        html = '<span>Obteniendo estado...</span>';
+                }
+                $('#status').html(html);
+            }
+
+            function handleFetchError(error, context) {
+                updateStatus('server_offline');
+                console.error(`Error en ${context}:`, error);
+                toastr.error('No se pudo conectar con el servidor de WhatsApp.', 'Error de Conexión');
+            }
+
+            // --- Socket.io Event Listeners ---
+            const socket = io(serverUrl);
+
+            socket.on('connect_error', (err) => {
+                handleFetchError(err, 'socket connect_error');
+                updateStatus('server_offline');
+            });
+
+            socket.on('login', data => {
+                updateStatus('online');
+                $('#qr_modal').modal('hide');
+                toastr.success('La sesión de WhatsApp se ha iniciado correctamente.', 'Conectado');
+            });
+
+            socket.on('qr', data => {
+                // Solo mostrar el QR si no estamos ya en línea
+                if (!isWhatsappOnline) {
+                    $('#qr_modal').modal('show');
+                    new QRious({
+                        element: document.querySelector("#qr_code"),
+                        value: data.qr,
+                        size: 450,
+                        backgroundAlpha: 0,
+                        foreground: "#000000",
+                        level: "H",
+                    });
+                }
+            });
+
+            socket.on('logout', data => {
+                updateStatus('offline', 'Sesión finalizada');
+                toastr.warning('La sesión de WhatsApp ha finalizado.', 'Desconectado');
+            });
+
+            socket.on('disconnected', data => {
+                $('#qr_modal').modal('hide');
+                updateStatus('offline', 'Sesión finalizada');
+                console.log('Socket disconnected:', data);
+                toastr.error('Se perdió la conexión con el servidor de WhatsApp.', 'Desconectado');
+            });
+
+            // --- Initial Status Check ---
+            async function checkInitialStatus() {
+                try {
+                    const response = await fetch(`${serverUrl}/status?id=${sessionId}`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const res = await response.json();
+
+                    if (res.success) {
+                        if (res.status == 1) {
+                            updateStatus('online');
+                        } else {
+                            updateStatus('offline');
+                        }
+                    } else {
+                        console.warn('El servidor respondió, pero no se pudo obtener el estado.');
+                    }
+                } catch (error) {
+                    handleFetchError(error, 'checkInitialStatus');
+                }
+            }
+
+            checkInitialStatus();
+
+            // --- Global function for login button ---
+            window.login = async function() {
+                $('#status').html('<span>Iniciando sesión...</span>');
+                try {
+                    const response = await fetch(`${serverUrl}/login?id=${sessionId}`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const res = await response.json();
+                    if (!res.success) {
+                        console.error('Error al intentar iniciar sesión:', res);
+                    }
+                } catch (error) {
+                    console.error('Error en login():', error);
+                    $('#status').html('<b class="text-danger">Error al conectar</b>');
+                }
+            }
+        });
+    </script>
+
+
+{{-- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ --}}
     <!-- Incluir Chart.js -->
+
+    <script src="{{ asset('js/btn-submit.js') }}"></script>  
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    @if ($globalFuntion_cashier)
+        @if ($globalFuntion_cashier->status == 'Abierta')
+            <script>
+                $(document).ready(function() {
+                    const data = {
+                        labels: [
+                            'Ingreso en Efectivo y Qr, Dinero Asignado',
+                            'Egresos en Efectivo y Qr',
+                        ],
+                        datasets: [{
+                            label: 'Bs.',
+                            data: [
+                                "{{ $globalFuntion_cashierMoney['paymentEfectivo'] + $globalFuntion_cashierMoney['paymentQr'] }}", // Ventas Efectivo
+            
+                                "{{ $globalFuntion_cashierMoney['paymentEfectivoEgreso'] + $globalFuntion_cashierMoney['paymentQrEgreso'] }}", // Gastos
+                            ],
+                            backgroundColor: [
+                                'rgb(60, 179, 113)',
+                                'rgb(229, 57, 53)'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    };
+                    const config = {
+                        type: 'doughnut',
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                }
+                            }
+                        }
+                    };
+                    var myChart = new Chart(
+                        document.getElementById('myChart'),
+                        config
+                    );
+
+                    $('.btn-agregar-gasto').click(function() {
+                        let cashier_id = $(this).data('cashier_id');
+                        $('#form-agregar-gasto input[name="cashier_id"]').val(cashier_id);
+                    });
+                });
+            </script>
+        @endif
+    @endif
 
     <script>
-        $(document).ready(function(){   
-            // Registrar plugins
-            Chart.register(ChartDataLabels);
-            
-            // Variables para control de tiempo real
-            let realtimeInterval;
-            let realtimeChart;
-            
-            // Datos de ejemplo mejorados
+        $(document).ready(function() {
+            // 1. Declarar las variables de los gráficos aquí para que sean accesibles en todo el script
+            let ventasMensualesChart, topProductosChart, ventasDiasChart;
+
+
+            // --- Preparación de datos iniciales para los gráficos ---
+            const monthData = @json($global_index['monthInteractive']);
             const ventasMensualesData = {
-                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                labels: monthData.map(item => item.month.substring(0, 3) + '-' + item.year),
                 datasets: [{
-                    label: 'Ventas 2023',
-                    data: [120000, 190000, 150000, 180000, 210000, 230000, 250000, 220000, 240000, 260000, 280000, 300000],
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    label: 'Ventas',
+                    data: monthData.map(item => item.amount),
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 2
                 }]
             };
 
+            // Datos para el gráfico de productos más vendidos
+            const productTop5Day = @json($global_index['productTop5Day']);
+
             const topProductosData = {
-                labels: ['Hamburguesa', 'Pizza', 'Ensalada', 'Bebida', 'Postre'],
+                labels: productTop5Day.map(item => item.name),
                 datasets: [{
                     label: 'Unidades Vendidas',
-                    data: [1200, 800, 500, 1500, 300],
+                    data: productTop5Day.map(item => item.total_quantity),
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)'
+                        '#E83410', // Rojo vibrante
+                        '#36A2EB', // Azul brillante
+                        '#FFCE56', // Amarillo soleado
+                        '#4BC0C0', // Turquesa
+                        '#9966FF'  // Púrpura
                     ],
                     borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
+                        '#E83410',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF'
                     ],
                     borderWidth: 1
                 }]
             };
 
+            // Datos para el gráfico de ventas por día de la semana
+            $weekDays = @json($global_index['weekDays']);
             const ventasDiasData = {
-                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                labels: $weekDays.map(item => item.name + ' (' + item.dateInverso + ')'),
+
                 datasets: [{
-                    label: 'Ventas promedio',
-                    data: [80000, 85000, 90000, 95000, 120000, 150000, 130000],
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    label: 'Total de Ventas',
+                    data: $weekDays.map(item => item.amount),
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
                     borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
+                    borderWidth: 1
                 }]
             };
 
             const comparacionAnualData = {
                 labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                datasets: [
-                    {
+                datasets: [{
                         label: '2022',
-                        data: [100000, 150000, 130000, 160000, 190000, 210000, 230000, 200000, 220000, 240000, 260000, 280000],
+                        data: [100000, 150000, 130000, 160000, 190000, 210000, 230000, 200000, 220000,
+                            240000, 260000, 280000
+                        ],
                         borderColor: 'rgba(201, 203, 207, 1)',
                         backgroundColor: 'rgba(201, 203, 207, 0.2)',
                         borderWidth: 2,
@@ -672,7 +999,9 @@
                     },
                     {
                         label: '2023',
-                        data: [120000, 190000, 150000, 180000, 210000, 230000, 250000, 220000, 240000, 260000, 280000, 300000],
+                        data: [120000, 190000, 150000, 180000, 210000, 230000, 250000, 220000, 240000,
+                            260000, 280000, 300000
+                        ],
                         borderColor: 'rgba(54, 162, 235, 1)',
                         backgroundColor: 'rgba(54, 162, 235, 0.2)',
                         borderWidth: 2,
@@ -680,48 +1009,6 @@
                         fill: true
                     }
                 ]
-            };
-
-            // Nuevos datos para gráficos adicionales
-            const ventasTiempoRealData = {
-                labels: [],
-                datasets: [{
-                    label: 'Ventas por Hora',
-                    data: [],
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            };
-
-            const metricasRendimientoData = {
-                labels: ['Ventas', 'Clientes', 'Eficiencia', 'Calidad', 'Rentabilidad', 'Crecimiento'],
-                datasets: [{
-                    label: 'Rendimiento Actual',
-                    data: [85, 78, 92, 88, 76, 90],
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
-                }]
-            };
-
-            const embudoConversionData = {
-                labels: ['Visitantes', 'Carrito', 'Checkout', 'Completado'],
-                datasets: [{
-                    data: [10000, 2500, 1200, 980],
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(255, 205, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)'
-                    ],
-                    borderWidth: 1
-                }]
             };
 
             // Configuración común para los gráficos
@@ -734,24 +1021,7 @@
                     },
                     tooltip: {
                         mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== undefined) {
-                                    label += new Intl.NumberFormat('en-US', {
-                                        style: 'currency',
-                                        currency: 'USD'
-                                    }).format(context.parsed.y);
-                                } else {
-                                    label += context.parsed;
-                                }
-                                return label;
-                            }
-                        }
+                        intersect: false
                     }
                 },
                 scales: {
@@ -759,14 +1029,6 @@
                         beginAtZero: true,
                         grid: {
                             drawBorder: false
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                if (value >= 1000) {
-                                    return '$' + value / 1000 + 'k';
-                                }
-                                return '$' + value;
-                            }
                         }
                     },
                     x: {
@@ -776,129 +1038,114 @@
                     }
                 }
             };
-            
+
             const pieChartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
+                    }
+                }
+            };
+
+            // Lógica para el filtro del dashboard
+            $('#filter-menu a').on('click', function(e) {
+                e.preventDefault();
+                var range = $(this).data('range');
+                $('#filter-button').html('<i class="voyager-refresh"></i> ' + range);
+                
+                // Muestra un loader mientras se cargan los datos
+                $('#voyager-loader').fadeIn();
+
+                // Petición AJAX para obtener los nuevos datos
+                $.ajax({
+                    url: '{{ url('admin/dashboard-data') }}/' + range,
+                    type: 'GET',
+                    success: function(data) {
+                        updateDashboard(data);
+                        $('#voyager-loader').fadeOut();
                     },
-                    datalabels: {
-                        color: '#fff',
-                        font: {
-                            weight: 'bold'
-                        },
-                        formatter: (value, ctx) => {
-                            return ctx.chart.data.labels[ctx.dataIndex];
-                        },
+                    error: function(error) {
+                        console.error("Error al cargar los datos:", error);
+                        toastr.error('No se pudieron actualizar los datos del dashboard.');
+                        $('#voyager-loader').fadeOut();
                     }
-                }
-            };
+                });
+            });
 
-            const realtimeOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                animation: {
-                    duration: 0
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            };
+            // Función para actualizar todos los componentes del dashboard
+            function updateDashboard(data) {
+                // --- Actualizar KPIs ---
+                let amountDaytotal = data.amountDaytotal;
+                let saleDaytotal = data.saleDaytotal;
+                let ticketPromedio = saleDaytotal > 0 ? (amountDaytotal / saleDaytotal) : 0;
 
-            const radarOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: {
-                            display: true
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 100
-                    }
+                // Formatear números a 2 decimales con coma
+                const formatNumber = (num) => {
+                    let value = parseFloat(num) || 0;
+                    return value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
-            };
 
-            const funnelOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.parsed} visitas`;
-                            }
-                        }
-                    }
-                }
-            };
+                $('.dashboard-kpi').eq(0).find('.kpi-value').text('Bs. ' + formatNumber(amountDaytotal));
+                $('.dashboard-kpi').eq(1).find('.kpi-value').text(saleDaytotal);
+                $('.dashboard-kpi').eq(2).find('.kpi-value').text('Bs. ' + formatNumber(ticketPromedio));
+                $('.dashboard-kpi').eq(3).find('.kpi-value').text(data.customer);
 
-            // Crear los gráficos principales
-            const ventasMensualesChart = new Chart(document.getElementById('ventasMensualesChart'), {
+                // --- Actualizar Gráficos ---
+
+                // Gráfico de Ventas Mensuales
+                ventasMensualesChart.data.datasets[0].data = data.monthInteractive.map(item => item.amount);
+                ventasMensualesChart.update();
+
+                // Gráfico de Top 5 Productos
+                topProductosChart.data.labels = data.productTop5Day.map(item => item.name);
+                topProductosChart.data.datasets[0].data = data.productTop5Day.map(item => item.total_quantity);
+                topProductosChart.update();
+
+                // Gráfico de Ventas por Día de la Semana
+                ventasDiasChart.data.datasets[0].data = data.weekDays.map(item => item.amount);
+                ventasDiasChart.update();
+
+                toastr.success('Dashboard actualizado para: ' + $('#filter-button').text().trim());
+            }
+
+            // 2. Inicializar los gráficos UNA SOLA VEZ, asignándolos a las variables declaradas arriba
+            ventasMensualesChart = new Chart(document.getElementById('ventasMensualesChart'), {
                 type: 'bar',
                 data: ventasMensualesData,
                 options: chartOptions
             });
 
-            const topProductosChart = new Chart(document.getElementById('topProductosChart'), {
-                type: 'pie',
+            topProductosChart = new Chart(document.getElementById('topProductosChart'), {
+                type: 'doughnut',
                 data: topProductosData,
                 options: pieChartOptions
             });
 
-            const ventasDiasChart = new Chart(document.getElementById('ventasDiasChart'), {
-                type: 'line',
+            ventasDiasChart = new Chart(document.getElementById('ventasDiasChart'), {
+                type: 'bar',
                 data: ventasDiasData,
                 options: chartOptions
             });
-
-            const comparacionAnualChart = new Chart(document.getElementById('comparacionAnualChart'), {
-                type: 'line',
-                data: comparacionAnualData,
-                options: chartOptions
-            });
-
-            // Crear nuevos gráficos
-            realtimeChart = new Chart(document.getElementById('ventasTiempoRealChart'), {
-                type: 'line',
-                data: ventasTiempoRealData,
-                options: realtimeOptions
-            });
-
-            new Chart(document.getElementById('metricasRendimientoChart'), {
-                type: 'radar',
-                data: metricasRendimientoData,
-                options: radarOptions
-            });
-
-            new Chart(document.getElementById('embudoConversionChart'), {
-                type: 'bar',
-                data: embudoConversionData,
-                options: funnelOptions
-            });
-
-            // Funcionalidades adicionales
 
             // Cambiar tipo de gráfico
             $('.chart-type-selector').change(function() {
                 const chartId = $(this).data('chart');
                 const newType = $(this).val();
                 
+                let chart;
                 if (chartId === 'ventasMensualesChart') {
-                    ventasMensualesChart.config.type = newType;
-                    ventasMensualesChart.update();
+                    chart = ventasMensualesChart;
+                } else if (chartId === 'ventasDiasChart') {
+                    chart = ventasDiasChart;
+                } else if (chartId === 'topProductosChart') {
+                    chart = topProductosChart;
+                }
+
+                if (chart) {
+                    chart.config.type = newType;
+                    chart.update();
                 }
             });
 
@@ -914,132 +1161,9 @@
                 link.click();
             });
 
-            // Alternar dataset
-            $('.toggle-dataset').click(function() {
-                const chart = ventasDiasChart;
-                const currentData = chart.data.datasets[0].data;
-                
-                // Datos alternativos
-                const alternativeData = [70000, 78000, 82000, 88000, 110000, 140000, 125000];
-                
-                if (JSON.stringify(currentData) === JSON.stringify(ventasDiasData.datasets[0].data)) {
-                    chart.data.datasets[0].data = alternativeData;
-                    chart.data.datasets[0].label = 'Ventas proyectadas';
-                } else {
-                    chart.data.datasets[0].data = ventasDiasData.datasets[0].data;
-                    chart.data.datasets[0].label = 'Ventas promedio';
-                }
-                
-                chart.update();
-            });
-
-            // Tiempo real
-            $('#start-realtime').click(function() {
-                if (realtimeInterval) {
-                    clearInterval(realtimeInterval);
-                }
-                
-                realtimeInterval = setInterval(() => {
-                    const now = new Date();
-                    const timeLabel = now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
-                    
-                    // Agregar nuevo dato aleatorio
-                    const newData = Math.floor(Math.random() * 1000) + 500;
-                    
-                    realtimeChart.data.labels.push(timeLabel);
-                    realtimeChart.data.datasets[0].data.push(newData);
-                    
-                    // Mantener solo últimos 10 puntos
-                    if (realtimeChart.data.labels.length > 10) {
-                        realtimeChart.data.labels.shift();
-                        realtimeChart.data.datasets[0].data.shift();
-                    }
-                    
-                    realtimeChart.update('none');
-                    
-                    // Actualizar timestamp
-                    $('#lastUpdateTime').text(timeLabel);
-                }, 2000);
-            });
-
-            $('#stop-realtime').click(function() {
-                if (realtimeInterval) {
-                    clearInterval(realtimeInterval);
-                    realtimeInterval = null;
-                }
-            });
-
-            // Selector de año para comparación
-            $('.year-selector').change(function() {
-                const selectedYear = $(this).val();
-                // En una implementación real, aquí harías una petición AJAX
-                // para obtener los datos del año seleccionado
-                alert(`Cargando datos para años ${selectedYear}-${parseInt(selectedYear)+1}`);
-            });
-
-            // Selector de período para productos
-            $('.chart-period-selector').change(function() {
-                const period = $(this).val();
-                // En una implementación real, aquí harías una petición AJAX
-                alert(`Cargando productos más vendidos del ${period}`);
-            });
-
-            // Interactividad en gráficos
-            ventasDiasChart.canvas.addEventListener('click', function(evt) {
-                const points = ventasDiasChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-                if (points.length) {
-                    const firstPoint = points[0];
-                    const label = ventasDiasChart.data.labels[firstPoint.index];
-                    const value = ventasDiasChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-                    alert(`Ventas del ${label}: $${value.toLocaleString()}`);
-                }
-            });
-
-            // Botón de refresh
-            $('#refresh-dashboard').click(function() {
-                const $btn = $(this);
-                const originalText = $btn.html();
-                
-                $btn.prop('disabled', true).html('<i class="voyager-refresh"></i> Actualizando...');
-                
-                // Simular actualización de datos
-                setTimeout(() => {
-                    // En una implementación real, aquí actualizarías los datos
-                    ventasMensualesChart.update();
-                    topProductosChart.update();
-                    ventasDiasChart.update();
-                    comparacionAnualChart.update();
-                    
-                    $btn.prop('disabled', false).html(originalText);
-                    showToast('Datos actualizados correctamente', 'success');
-                }, 1500);
-            });
-
-            // Función para mostrar notificaciones
-            function showToast(message, type = 'info') {
-                // Implementación básica de toast
-                const toast = $(`
-                    <div class="alert alert-${type} alert-dismissible" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        ${message}
-                    </div>
-                `);
-                
-                $('body').append(toast);
-                
-                setTimeout(() => {
-                    toast.alert('close');
-                }, 3000);
-            }
-
-            // Selector de rango de tiempo
-            $('.dropdown-menu a[data-range]').click(function(e) {
-                e.preventDefault();
-                const range = $(this).data('range');
-                // En una implementación real, aquí actualizarías todos los gráficos
-                // según el rango de tiempo seleccionado
-                alert(`Filtrando datos para: ${range}`);
-            });
         });
     </script>
+    
+    
+
 @stop
