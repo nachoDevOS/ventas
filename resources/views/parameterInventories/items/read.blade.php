@@ -37,8 +37,8 @@
                 <div class="panel-body">
                     <div class="row">
 
-                        {{-- Imagen --}}
-                        <div class="col-md-2" style="display: flex; align-items: center; justify-content: center;">
+                        {{-- Imagen + Nombre --}}
+                        <div class="col-md-2" style="text-align: center;">
                             @php
                                 $image = $item->image ? Voyager::image($item->image) : asset('images/default.jpg');
                             @endphp
@@ -46,23 +46,21 @@
                                  style="width: 100%; max-width: 160px; height: 160px; object-fit: cover;
                                         border-radius: 8px; border: 2px solid #eee;"
                                  alt="{{ $item->nameTrade ?? $item->nameGeneric }}">
+                            <div style="margin-top: 8px;">
+                                <div style="font-weight: 700; color: #2c3e50; font-size: 14px; line-height: 1.3;">
+                                    {{ strtoupper($item->nameGeneric) }}
+                                </div>
+                                @if($item->nameTrade)
+                                    <div style="font-size: 12px; color: #777; margin-top: 3px;">
+                                        <i class="fa-solid fa-tag"></i> {{ $item->nameTrade }}
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         {{-- Info principal --}}
                         <div class="col-md-10">
                             <div class="row">
-
-                                <div class="col-md-12" style="margin-bottom: 8px;">
-                                    <h3 style="margin: 0 0 4px 0; font-weight: 700; color: #2c3e50; font-size: 20px;">
-                                        {{ strtoupper($item->nameGeneric) }}
-                                    </h3>
-                                    @if($item->nameTrade)
-                                        <span style="font-size: 14px; color: #777;">
-                                            <i class="fa-solid fa-tag"></i> {{ $item->nameTrade }}
-                                        </span>
-                                    @endif
-                                </div>
-
                                 <div class="col-md-3">
                                     <div class="item-info-card">
                                         <span class="item-info-label">Laboratorio</span>
