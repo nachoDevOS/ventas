@@ -199,10 +199,10 @@
                     </div>
                     <div class="panel-body" style="padding: 0;">
                         <div class="table-responsive">
-                            <table class="table table-hover table-custom">
+                            <table id="dataTable" class="table table-hover table-custom">
                                 <thead>
                                     <tr>
-                                        <th style="text-align: center; width: 4%">N&deg;</th>
+                                        <th style="width: 30px;"></th>
                                         <th style="text-align: center; width: 10%">Código</th>
                                         <th style="text-align: center;">Cliente</th>
                                         <th style="text-align: center; width: 16%">Fecha</th>
@@ -213,30 +213,43 @@
                                 </thead>
                                 <tbody>
                                     @php
-                                        $count                    = 1;
-                                        $total_ventas             = 0;
-                                        $total_ventas_qr          = 0;
-                                        $total_ventas_efectivo    = 0;
-                                        $total_ventas_anulado     = 0;
+                                        $total_ventas          = 0;
+                                        $total_ventas_qr       = 0;
+                                        $total_ventas_efectivo = 0;
+                                        $total_ventas_anulado  = 0;
                                     @endphp
                                     @forelse ($cashier->sales->sortByDesc('created_at') as $item)
-                                        <tr @if ($item->deleted_at) style="text-decoration: line-through; color: #e74c3c;" @endif>
-                                            <td style="text-align: center; font-size: 11px;">{{ $count }}</td>
-                                            <td style="text-align: center;">
+                                        @php
+                                            $pagoQr       = $item->saleTransactions->where('paymentType', 'Qr')->sum('amount');
+                                            $pagoEfectivo = $item->saleTransactions->where('paymentType', 'Efectivo')->sum('amount');
+                                            if ($item->deleted_at == null) {
+                                                $total_ventas_qr       += $pagoQr;
+                                                $total_ventas_efectivo += $pagoEfectivo;
+                                                $total_ventas          += $pagoQr + $pagoEfectivo;
+                                            } else {
+                                                $total_ventas_anulado += $item->amount;
+                                            }
+                                        @endphp
+                                        {{-- Fila principal --}}
+                                        <tr class="tr-main" data-id="sale-{{ $item->id }}"
+                                            style="cursor: pointer; @if ($item->deleted_at) text-decoration: line-through; color: #e74c3c; @endif">
+                                            <td style="text-align: center; vertical-align: middle;">
+                                                <i class="voyager-angle-down icon-toggle" id="icon-sale-{{ $item->id }}"></i>
+                                            </td>
+                                            <td style="text-align: center; vertical-align: middle;" class="no-click">
                                                 @if ($item->deleted_at == null && $cashier->status == 'Abierta')
                                                     <a href="#"
                                                         onclick="deleteItem('{{ route('sales.destroy', ['sale' => $item->id]) }}')"
                                                         title="Eliminar" data-toggle="modal" data-target="#modal-delete"
                                                         class="btn btn-sm btn-danger delete">
                                                         <i class="voyager-trash"></i>
-                                                    </a>
-                                                    <br>
+                                                    </a><br>
                                                 @endif
                                                 <a href="{{ route('sales.show', ['sale' => $item->id]) }}" target="_blank" title="Ver Venta">
-                                                    {{ $item->invoiceNumber ?? $item->id }}
+                                                    {{ $item->invoiceNumber ?? '#'.$item->id }}
                                                 </a>
                                             </td>
-                                            <td style="font-size: 11px;">
+                                            <td style="font-size: 11px; vertical-align: middle;">
                                                 @if ($item->person)
                                                     {{ strtoupper($item->person->first_name) }}
                                                     {{ $item->person->middle_name ? strtoupper($item->person->middle_name) : '' }}
@@ -246,25 +259,104 @@
                                                     <span class="text-muted">Sin cliente</span>
                                                 @endif
                                             </td>
-                                            <td style="text-align: center; font-size: 11px;">
+                                            <td style="text-align: center; font-size: 11px; vertical-align: middle;">
                                                 {{ date('d/m/Y H:i', strtotime($item->dateSale ?? $item->created_at)) }}
                                             </td>
-                                            @php
-                                                $pagoQr       = $item->saleTransactions->where('paymentType', 'Qr')->sum('amount');
-                                                $pagoEfectivo = $item->saleTransactions->where('paymentType', 'Efectivo')->sum('amount');
-                                                if ($item->deleted_at == null) {
-                                                    $total_ventas_qr       += $pagoQr;
-                                                    $total_ventas_efectivo += $pagoEfectivo;
-                                                    $total_ventas          += $pagoQr + $pagoEfectivo;
-                                                } else {
-                                                    $total_ventas_anulado += $item->amount;
-                                                }
-                                            @endphp
-                                            <td class="text-right">{{ number_format($pagoQr, 2, ',', '.') }}</td>
-                                            <td class="text-right">{{ number_format($pagoEfectivo, 2, ',', '.') }}</td>
-                                            <td class="text-right">{{ number_format($item->amount, 2, ',', '.') }}</td>
+                                            <td class="text-right" style="vertical-align: middle;">{{ number_format($pagoQr, 2, ',', '.') }}</td>
+                                            <td class="text-right" style="vertical-align: middle;">{{ number_format($pagoEfectivo, 2, ',', '.') }}</td>
+                                            <td class="text-right" style="vertical-align: middle; font-weight: bold;">{{ number_format($item->amount, 2, ',', '.') }}</td>
                                         </tr>
-                                        @php $count++; @endphp
+                                        {{-- Fila expandible con detalle --}}
+                                        <tr id="tr-details-sale-{{ $item->id }}" style="display: none; background-color: #f8fbff;">
+                                            <td colspan="7" style="padding: 14px 20px; border-top: none;">
+                                                <div class="row">
+                                                    {{-- Productos --}}
+                                                    <div class="col-md-8">
+                                                        <strong style="font-size: 12px; color: #555; display: block; margin-bottom: 8px;">
+                                                            <i class="voyager-bag"></i> Productos vendidos
+                                                        </strong>
+                                                        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                                                            <thead>
+                                                                <tr style="background: #dce8f5;">
+                                                                    <th style="padding: 5px 8px; border: 1px solid #c8daf0;">Producto</th>
+                                                                    <th style="padding: 5px 8px; border: 1px solid #c8daf0; text-align: center; width: 55px;">Cant.</th>
+                                                                    <th style="padding: 5px 8px; border: 1px solid #c8daf0; text-align: right; width: 80px;">P.Unit.</th>
+                                                                    <th style="padding: 5px 8px; border: 1px solid #c8daf0; text-align: right; width: 70px;">Dto.</th>
+                                                                    <th style="padding: 5px 8px; border: 1px solid #c8daf0; text-align: right; width: 80px;">Subtotal</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @forelse ($item->saleDetails->where('deleted_at', null) as $detail)
+                                                                    <tr>
+                                                                        <td style="padding: 4px 8px; border: 1px solid #eee;">
+                                                                            {{ $detail->itemStock->item->nameGeneric ?? '—' }}
+                                                                            @if ($detail->dispensed === 'Fraccionado')
+                                                                                <span class="label label-info" style="font-size: 10px; margin-left: 4px;">Fracc.</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td style="padding: 4px 8px; border: 1px solid #eee; text-align: center;">{{ $detail->quantity }}</td>
+                                                                        <td style="padding: 4px 8px; border: 1px solid #eee; text-align: right;">Bs. {{ number_format($detail->price, 2) }}</td>
+                                                                        <td style="padding: 4px 8px; border: 1px solid #eee; text-align: right;">
+                                                                            @if ($detail->discount > 0)
+                                                                                <span class="text-danger">-Bs. {{ number_format($detail->discount, 2) }}</span>
+                                                                            @else
+                                                                                <span class="text-muted">—</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td style="padding: 4px 8px; border: 1px solid #eee; text-align: right; font-weight: bold;">Bs. {{ number_format($detail->amount, 2) }}</td>
+                                                                    </tr>
+                                                                @empty
+                                                                    <tr>
+                                                                        <td colspan="5" class="text-center text-muted" style="padding: 8px;">Sin detalle de productos</td>
+                                                                    </tr>
+                                                                @endforelse
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    {{-- Pago y registro --}}
+                                                    <div class="col-md-4">
+                                                        <strong style="font-size: 12px; color: #555; display: block; margin-bottom: 8px;">
+                                                            <i class="fa fa-credit-card"></i> Desglose de pago
+                                                        </strong>
+                                                        <table style="width: 100%; font-size: 12px;">
+                                                            <tr>
+                                                                <td><i class="fa-solid fa-money-bill-wave" style="color: #27ae60;"></i> Efectivo:</td>
+                                                                <td class="text-right"><b>Bs. {{ number_format($pagoEfectivo, 2) }}</b></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><i class="fa-solid fa-qrcode" style="color: #1565c0;"></i> QR / Transf.:</td>
+                                                                <td class="text-right"><b>Bs. {{ number_format($pagoQr, 2) }}</b></td>
+                                                            </tr>
+                                                            @if (($item->general_discount ?? 0) > 0)
+                                                                <tr>
+                                                                    <td class="text-danger">Dto. General:</td>
+                                                                    <td class="text-right text-danger">-Bs. {{ number_format($item->general_discount, 2) }}</td>
+                                                                </tr>
+                                                            @endif
+                                                            <tr style="border-top: 2px solid #ddd;">
+                                                                <td><b>Total cobrado:</b></td>
+                                                                <td class="text-right"><b>Bs. {{ number_format($item->amount, 2) }}</b></td>
+                                                            </tr>
+                                                        </table>
+                                                        @if ($item->register)
+                                                            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
+                                                                <i class="fa fa-user"></i> Registrado por: <b>{{ $item->register->name }}</b>
+                                                            </div>
+                                                        @endif
+                                                        @if ($item->observation)
+                                                            <div style="margin-top: 6px; font-size: 11px; color: #888; font-style: italic;">
+                                                                <i class="fa fa-comment"></i> {{ $item->observation }}
+                                                            </div>
+                                                        @endif
+                                                        @if ($item->deleted_at)
+                                                            <div style="margin-top: 8px; padding: 6px 10px; background: #ffebee; border-radius: 4px; font-size: 11px; color: #c62828;">
+                                                                <i class="voyager-trash"></i> Anulada — {{ $item->deleteObservation ?? 'sin motivo' }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @empty
                                         <tr>
                                             <td colspan="7">

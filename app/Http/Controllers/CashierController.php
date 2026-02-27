@@ -121,8 +121,32 @@ class CashierController extends Controller
 
     public function show($id)
     {
-        $cashier = $this->cashier('id = "'.$id.'"', null, null);        
-        return view('cashiers.read' , compact('cashier'));
+        $cashier = Cashier::with([
+                'user',
+                'movements' => function ($q) {
+                    $q->where('deleted_at', null)->with(['user']);
+                },
+                'sales' => function ($q) {
+                    $q->with([
+                        'person',
+                        'register',
+                        'saleTransactions' => function ($q) {
+                            $q->where('deleted_at', null);
+                        },
+                        'saleDetails' => function ($q) {
+                            $q->with(['itemStock.item']);
+                        },
+                    ]);
+                },
+                'expenses' => function ($q) {
+                    $q->with(['expenseTransactions', 'register']);
+                },
+            ])
+            ->where('id', $id)
+            ->where('deleted_at', null)
+            ->first();
+
+        return view('cashiers.read', compact('cashier'));
     }
 
     //*** Para que los cajeros Acepte o rechase el dinero dado por Boveda o gerente
