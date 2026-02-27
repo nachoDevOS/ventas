@@ -59,7 +59,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
 
     Route::get('item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
 
-    Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);//Para listar el historial de stock
+    Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);
+    Route::get('items/{id}/sales/ajax/list', [ItemController::class, 'listSales']);
     Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');
     Route::delete('items/{id}/stock/{stock}', [ItemController::class, 'destroyStock'])->name('items-stock.destroy');
 

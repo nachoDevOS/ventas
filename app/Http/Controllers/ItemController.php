@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\StorageController;
 use App\Models\IncomeDetail;
 use App\Models\ItemStock;
+use App\Models\SaleDetail;
 
 class ItemController extends Controller
 {
@@ -202,7 +203,7 @@ class ItemController extends Controller
     {
         $this->custom_authorize('read_items');
 
-        $item = Item::with(['laboratory', 'line'])
+        $item = Item::with(['laboratory', 'line', 'presentation', 'fractionPresentation'])
             ->where('id', $id)
             ->where('deleted_at', null)
             ->first();
@@ -266,6 +267,26 @@ class ItemController extends Controller
             DB::rollback();
             return redirect()->route('voyager.items.show',  ['id'=>$id])->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
         } 
+    }
+
+    public function listSales($id)
+    {
+        $paginate = request('paginate') ?? 10;
+
+        $data = SaleDetail::with([
+                'sale.person',
+                'sale.register',
+                'sale.saleTransactions',
+                'itemStock',
+            ])
+            ->whereHas('itemStock', function ($q) use ($id) {
+                $q->where('item_id', $id);
+            })
+            ->where('deleted_at', null)
+            ->orderBy('id', 'DESC')
+            ->paginate($paginate);
+
+        return view('parameterInventories.items.sales.list', compact('data'));
     }
 
     public function destroyStock($id, $stock)
