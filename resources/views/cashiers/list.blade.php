@@ -1,135 +1,160 @@
 <div class="col-md-12">
     <div class="table-responsive">
-        <table id="dataTable" class="table table-hover">
+        <table id="dataTable" class="table table-hover" style="margin-bottom: 0;">
             <thead>
                 <tr>
-                    <th style="text-align: center">Id</th>
-                    <th style="text-align: center">Usuario</th>
-                    <th style="text-align: center">Nombre</th>
-                    <th style="text-align: center">Estado</th>
-                    <th style="text-align: center">Apertura</th>
-                    <th style="text-align: center">Cierre</th>
-                    <th style="text-align: center">Detalles de cierre</th>
-                    <th style="text-align: right">Acciones</th>
+                    <th style="width: 220px;">Cajero</th>
+                    <th>Descripción</th>
+                    <th style="text-align: center; width: 150px;">Estado</th>
+                    <th style="text-align: center; width: 150px;">Apertura</th>
+                    <th style="text-align: center; width: 150px;">Cierre</th>
+                    <th style="width: 220px;">Resumen</th>
+                    <th style="text-align: right; width: 130px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($cashier as $item)
                     <tr>
-                        <td>{{ $item->id }}</td>
-                        <td style="width: 200pt;">
+                        {{-- ── Cajero ──────────────────────────────────────────── --}}
+                        <td style="vertical-align: middle;">
                             @php
-                                $image = $item->user->avatar ? asset('storage/' . $item->user->avatar) : asset('images/default.jpg');
+                                $image = $item->user->avatar
+                                    ? asset('storage/' . $item->user->avatar)
+                                    : asset('images/default.jpg');
                             @endphp
-                            <div style="display: flex; align-items: center;">
-                                <img src="{{ $image }}" alt="{{ $item->user->name }}" style="width: 40px; height: 40px; border-radius: 20px; margin-right: 10px; object-fit: cover;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="{{ $image }}" alt="{{ $item->user->name }}"
+                                    style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; flex-shrink: 0;">
                                 <div>
-                                    <b>{{ strtoupper($item->user->name) }}</b><br>
-                                    <small>{{ $item->user->role->display_name }}</small>
+                                    <b style="font-size: 13px;">{{ strtoupper($item->user->name) }}</b><br>
+                                    <small class="text-muted">{{ $item->user->role->display_name ?? '—' }}</small><br>
+                                    <span style="font-size: 10px; color: #aaa;">#{{ $item->id }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td style="text-align: center; vertical-align: middle;">{{ strtoupper($item->title) }}
-                            <br>                            
-                            <label class="label label-info" style="background-color: #5bc0de;"><i class="voyager-shop"></i> {{$item->sale}}</label>
 
+                        {{-- ── Descripción ─────────────────────────────────────── --}}
+                        <td style="vertical-align: middle;">
+                            <b style="font-size: 13px;">{{ strtoupper($item->title) }}</b>
+                            @if ($item->sale)
+                                <br>
+                                <span class="label label-info" style="font-size: 11px; margin-top: 3px; display: inline-block;">
+                                    <i class="voyager-shop"></i> {{ $item->sale }} venta(s)
+                                </span>
+                            @endif
+                            @if ($item->observation)
+                                <br><small class="text-muted" style="font-style: italic;">{{ \Illuminate\Support\Str::limit($item->observation, 40) }}</small>
+                            @endif
                         </td>
+
+                        {{-- ── Estado ──────────────────────────────────────────── --}}
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->status == 'Abierta')
-                                <label class="label label-success" style="padding: 5px 10px; font-size: 12px;"><i class="voyager-unlock"></i> Abierta</label>
+                                <span class="label label-success" style="padding: 6px 12px; font-size: 12px; border-radius: 20px;">
+                                    <i class="voyager-unlock"></i> Abierta
+                                </span>
+                            @elseif ($item->status == 'Cerrada')
+                                <span class="label label-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 20px;">
+                                    <i class="voyager-lock"></i> Cerrada
+                                </span>
+                            @elseif ($item->status == 'Cierre Pendiente')
+                                <span class="label label-primary" style="padding: 6px 12px; font-size: 12px; border-radius: 20px;">
+                                    <i class="voyager-watch"></i> Cierre Pend.
+                                </span>
+                            @elseif ($item->status == 'Apertura Pendiente')
+                                <span class="label label-warning" style="padding: 6px 12px; font-size: 12px; border-radius: 20px;">
+                                    <i class="voyager-key"></i> Apertura Pend.
+                                </span>
                             @endif
-                            @if ($item->status == 'Cerrada')
-                                <label class="label label-danger" style="padding: 5px 10px; font-size: 12px;"><i class="voyager-lock"></i> Cerrada</label>
-                            @endif
-
-                            @if ($item->status == 'Cierre Pendiente')
-                                <label class="label label-primary" style="padding: 5px 10px; font-size: 12px;"><i class="voyager-watch"></i> Cierre Pendiente</label>
-                            @endif
-
-                            @if ($item->status == 'Apertura Pendiente')
-                                <label class="label label-warning" style="padding: 5px 10px; font-size: 12px;"><i class="voyager-key"></i> Apertura Pendiente</label>
-                            @endif
-
                         </td>
+
+                        {{-- ── Apertura ─────────────────────────────────────────── --}}
                         <td style="text-align: center; vertical-align: middle;">
-                            <b style="font-size: 14px;">Bs. {{ number_format($item->amountOpening, 2, ',', '.') }}</b><br>
-                            <small>{{ date('d/m/Y', strtotime($item->created_at)) }}</small><br>
-                            <small>{{ date('h:i:s a', strtotime($item->created_at)) }}</small>
+                            <b style="font-size: 14px; color: #27ae60;">Bs. {{ number_format($item->amountOpening, 2, ',', '.') }}</b><br>
+                            <small class="text-muted">
+                                <i class="fa fa-calendar"></i> {{ date('d/m/Y', strtotime($item->created_at)) }}<br>
+                                <i class="fa fa-clock-o"></i> {{ date('H:i', strtotime($item->created_at)) }}
+                            </small>
                         </td>
+
+                        {{-- ── Cierre ───────────────────────────────────────────── --}}
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->closed_at)
-                                <b>{{ date('d/m/Y', strtotime($item->closed_at)) }}</b><br>
-                                <small>{{ date('h:i:s a', strtotime($item->closed_at)) }}</small>
+                                <small class="text-muted">
+                                    <i class="fa fa-calendar"></i> {{ date('d/m/Y', strtotime($item->closed_at)) }}<br>
+                                    <i class="fa fa-clock-o"></i> {{ date('H:i', strtotime($item->closed_at)) }}
+                                </small>
                             @else
-                                <small>--</small>
+                                <span class="text-muted" style="font-size: 18px;">—</span>
                             @endif
                         </td>
-                        <td style="vertical-align: middle;">
-                            {{-- @php
-                                $cashierIn = $item->movements->where('type', 'ingreso')->where('deleted_at', NULL)->where('status', 'Aceptado')->sum('amount');
-                                $cashierOut =0;
 
-                                $paymentEfectivo = $item->sales->where('deleted_at', NULL)
-                                    ->flatMap(function($sale) {
-                                        return $sale->saleTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                    })
-                                    ->sum();
-
-                                $paymentQr = $item->sales->where('deleted_at', NULL)
-                                    ->flatMap(function($sale) {
-                                        return $sale->saleTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                    })
-                                    ->sum();
-                                $amountCashier = ($cashierIn + $paymentEfectivo) - $cashierOut;
-                            @endphp --}}
-                            @if ($item->status=='Cerrada')
-                                <small>Monto de cierre:</small> <b>Bs. {{ number_format($item->amountClosed, 2, ',', '.') }}</b><br>
-                                <small>Monto faltante:</small> <b class="@if($item->amountMissing > 0) text-danger @endif">Bs. {{ number_format($item->amountMissing, 2, ',', '.') }}</b><br>
-                                <small>Monto Sobrante:</small> <b class="@if($item->amountLeftover > 0) text-success @endif">Bs. {{ number_format($item->amountLeftover, 2, ',', '.') }}</b><br>
+                        {{-- ── Resumen ──────────────────────────────────────────── --}}
+                        <td style="vertical-align: middle; font-size: 12px;">
+                            @if ($item->status == 'Cerrada')
+                                <div style="line-height: 1.8;">
+                                    <span class="text-muted">Monto de cierre:</span>
+                                    <b style="float: right;">Bs. {{ number_format($item->amountClosed, 2, ',', '.') }}</b><br>
+                                    <span class="text-muted">Faltante:</span>
+                                    <b class="{{ $item->amountMissing > 0 ? 'text-danger' : 'text-muted' }}" style="float: right;">
+                                        Bs. {{ number_format($item->amountMissing, 2, ',', '.') }}
+                                    </b><br>
+                                    <span class="text-muted">Sobrante:</span>
+                                    <b class="{{ $item->amountLeftover > 0 ? 'text-success' : 'text-muted' }}" style="float: right;">
+                                        Bs. {{ number_format($item->amountLeftover, 2, ',', '.') }}
+                                    </b>
+                                </div>
+                            @elseif ($item->status == 'Abierta')
+                                <span style="color: #27ae60; font-size: 12px;">
+                                    <i class="fa fa-circle" style="font-size: 9px;"></i> En operación
+                                </span>
+                            @elseif ($item->status == 'Cierre Pendiente')
+                                <span class="text-primary" style="font-size: 12px;">
+                                    <i class="fa fa-hourglass-half"></i> Esperando confirmación de cierre
+                                </span>
+                            @elseif ($item->status == 'Apertura Pendiente')
+                                <span class="text-warning" style="font-size: 12px;">
+                                    <i class="fa fa-hourglass-start"></i> Esperando aceptación de apertura
+                                </span>
                             @endif
                         </td>
+
+                        {{-- ── Acciones ─────────────────────────────────────────── --}}
                         <td style="text-align: right; vertical-align: middle;">
-                            <div class="btn-group" style="margin-right: 3px">
-                                <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
-                                    Mas <span class="caret"></span>
+                            @if (auth()->user()->hasPermission('read_cashiers'))
+                                <a href="{{ route('cashiers.show', ['cashier' => $item->id]) }}"
+                                    title="Ver detalle de caja" class="btn btn-sm btn-warning">
+                                    <i class="voyager-eye"></i> Ver
+                                </a>
+                            @endif
+                            <div class="btn-group" style="margin-left: 3px;">
+                                <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" title="Más opciones">
+                                    <i class="fa fa-print"></i> <span class="caret"></span>
                                 </button>
-                                <ul class="dropdown-menu" role="menu" style="left: -90px !important">
-                                    {{-- @php
-                                        dump($item->movements->first());
-                                    @endphp --}}
-                                    {{-- @foreach ($item->vault_details as $aux) --}}
-                                        <li><a href="#" onclick="openWindow({{ $item->id }})"
-                                                style="color: blue" data-toggle="modal" title="Imprimir Comprobante"><i
-                                                    class="fa-solid fa-print"></i>
-                                                Imprimir Comporbante de Apertura</a>
-                                        </li>
-                                    {{-- @endforeach --}}
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                                    <li>
+                                        <a href="#" onclick="openWindow({{ $item->id }})" title="Imprimir Comprobante de Apertura">
+                                            <i class="fa-solid fa-print" style="color: #337ab7;"></i> Comprobante de Apertura
+                                        </a>
+                                    </li>
                                     @if ($item->status == 'Cerrada')
-                                        <li><a href="#" onclick="closeWindow({{ $item->id }})"
-                                                style="color: red" data-toggle="modal"
-                                                title="Imprimir Comprobante de Cierre"><i class="fa-solid fa-print"></i>
-                                                Imprimir Comprobante de Cierre
+                                        <li>
+                                            <a href="#" onclick="closeWindow({{ $item->id }})" title="Imprimir Comprobante de Cierre">
+                                                <i class="fa-solid fa-print" style="color: #e74c3c;"></i> Comprobante de Cierre
                                             </a>
                                         </li>
                                     @endif
                                 </ul>
                             </div>
-                            @if (auth()->user()->hasPermission('read_cashiers'))
-                                <a href="{{ route('cashiers.show', ['cashier' => $item->id]) }}" title="Editar"
-                                    class="btn btn-sm btn-warning">
-                                    <i class="voyager-eye"></i> <span class="hidden-xs hidden-sm">Ver</span>
-                                </a>
-                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8">
-                            <h5 class="text-center" style="margin-top: 50px">
-                                <img src="{{ asset('images/empty.png') }}" width="120px" alt=""
-                                    style="opacity: 0.8">
-                                <br><br>
-                                No hay resultados
+                        <td colspan="7">
+                            <h5 class="text-center" style="margin: 50px 0; color: #bbb;">
+                                <img src="{{ asset('images/empty.png') }}" width="110px" alt=""
+                                    style="opacity: 0.6; display: block; margin: 0 auto 12px;">
+                                No hay cajas registradas
                             </h5>
                         </td>
                     </tr>
@@ -139,14 +164,16 @@
     </div>
 </div>
 
-<div class="col-md-12">
-    <div class="col-md-4" style="overflow-x:auto">
+<div class="col-md-12" style="margin-top: 10px;">
+    <div class="col-md-4" style="overflow-x: auto;">
         @if (count($cashier) > 0)
-            <p class="text-muted">Mostrando del {{ $cashier->firstItem() }} al {{ $cashier->lastItem() }} de
-                {{ $cashier->total() }} registros.</p>
+            <p class="text-muted" style="margin-top: 8px;">
+                Mostrando del {{ $cashier->firstItem() }} al {{ $cashier->lastItem() }} de
+                {{ $cashier->total() }} registros.
+            </p>
         @endif
     </div>
-    <div class="col-md-8" style="overflow-x:auto">
+    <div class="col-md-8" style="overflow-x: auto;">
         <nav class="text-right">
             {{ $cashier->links() }}
         </nav>
@@ -155,9 +182,8 @@
 
 <script>
     var page = "{{ request('page') }}";
-    $(document).ready(function() {
-
-        $('.page-link').click(function(e) {
+    $(document).ready(function () {
+        $('.page-link').click(function (e) {
             e.preventDefault();
             let link = $(this).attr('href');
             if (link) {
@@ -166,7 +192,7 @@
             }
         });
 
-        $('.btn-agregar-gasto').click(function() {
+        $('.btn-agregar-gasto').click(function () {
             let cashier_id = $(this).data('cashier_id');
             $('#form-agregar-gasto input[name="cashier_id"]').val(cashier_id);
         });

@@ -44,6 +44,7 @@ class CashierController extends Controller
                         }
                     })
                     ->where('deleted_at', null)
+                    ->with(['user.role'])
                     ->orderBy('id', 'DESC')
                     ->paginate($paginate);
             
