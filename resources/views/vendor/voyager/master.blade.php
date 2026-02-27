@@ -159,12 +159,11 @@ if (\Illuminate\Support\Str::startsWith(Auth::user()->avatar, 'http://') || \Ill
             <div class="side-body padding-top">
                 @include('vendor.voyager.partials.payment-alert')
 
-
                 @yield('page_header')
                 <div id="voyager-notifications"></div>
 
                 {{-- Para la ventana emergente --}}
-                {{-- @include('vendor.voyager.partials.cashier-popup') --}}
+                @include('vendor.voyager.partials.cashier-popup')
 
                 @yield('content')
             </div>

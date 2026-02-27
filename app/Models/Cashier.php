@@ -56,41 +56,6 @@ class Cashier extends Model
         return $this->hasMany(Sale::class, 'cashier_id')->withTrashed();
     }
 
-    // public function vaccinationRecords(){
-    //     return $this->hasMany(VaccinationRecord::class, 'cashier_id')->withTrashed();
-    // }
-
-    // public function dewormings(){
-    //     return $this->hasMany(Deworming::class, 'cashier_id')->withTrashed();
-    // }
-
-    // public function anamnesisForms(){
-    //     return $this->hasMany(AnamnesisForm::class, 'cashier_id')->withTrashed();
-    // }
-
-    // public function hairSalons(){
-    //     return $this->hasMany(HairSalon::class, 'cashier_id')->withTrashed();
-    // }
-
-    // public function homeServices(){
-    //     return $this->hasMany(HomeService::class, 'cashier_id')->withTrashed();
-    // }
-
-    // public function euthanasias(){
-    //     return $this->hasMany(Euthanasia::class, 'cashier_id')->withTrashed();
-    // }
-
-
-    // Egresooooo
-
-    // public function advancePayments(){
-    //     return $this->hasMany(AdvancePayment::class, 'cashier_id')->withTrashed();
-    // }
-    // public function paymentSheets(){
-    //     return $this->hasMany(PaymentSheet::class, 'cashier_id')->withTrashed();
-    // }
-
-
 
 
 
