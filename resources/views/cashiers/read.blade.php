@@ -494,6 +494,8 @@
 @stop
 
 @section('javascript')
+<script src="{{ asset('js/btn-submit.js') }}"></script>
+<script src="{{ asset('js/input-numberBlock.js') }}"></script>
 <script>
     function deleteItem(url) {
         $('#delete_form').attr('action', url);
