@@ -253,7 +253,7 @@
 </div>
 
 {{-- Modal Registrar Stock --}}
-<form action="{{ route('items-stock.store', ['id' => $item->id]) }}" class="form-submit" method="POST">
+<form action="{{ route('items-stock.store', ['id' => $item->id]) }}" class="form-edit-add form-submit" method="POST">
     <div class="modal fade" data-backdrop="static" id="modal-register-stock" role="dialog">
         <div class="modal-dialog modal-lg modal-success">
             <div class="modal-content">
@@ -400,8 +400,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                    <input type="submit" class="btn btn-success btn-form-submit" value="Guardar">
+                    <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancelar</button>
+                    <input type="submit" class="btn btn-success btn-form-submit btn-submit" value="Guardar">
                 </div>
             </div>
         </div>
@@ -445,6 +445,8 @@
 @stop
 
 @section('javascript')
+    <script src="{{ asset('js/btn-submit.js') }}"></script>
+    <script src="{{ asset('js/input-numberBlock.js') }}"></script>
     <script src="{{ url('js/main.js') }}"></script>
     <script>
         var countPage = 10, timeout = null;

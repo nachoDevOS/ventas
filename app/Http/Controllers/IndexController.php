@@ -146,17 +146,6 @@ class IndexController extends Controller
         $amountDaytotal    = (float) $todaySalesCol->sum('amount');
         $saleDaytotalCount = $todaySalesCol->count();
 
-        // ── Tipo de venta del día (Contado / Crédito / Proforma) ──────────────
-        $types = ['Venta al Contado', 'Venta al Credito', 'Proforma'];
-        $typeSaleBreakdown = array_map(function ($type) use ($todaySalesCol) {
-            $group = $todaySalesCol->where('typeSale', $type);
-            return [
-                'type'   => $type,
-                'amount' => (float) $group->sum('amount'),
-                'count'  => $group->count(),
-            ];
-        }, $types);
-
         // ── Método de pago del día (Efectivo / QR) ────────────────────────────
         $paymentBreakdown = SaleTransaction::whereNull('deleted_at')
             ->whereHas('sale', fn($q) => $q->whereDate('created_at', $today)->whereNull('deleted_at'))
@@ -229,7 +218,6 @@ class IndexController extends Controller
             'pet'               => 0,
             'productTop5Day'    => $productTop5Day,
             'weekDays'          => $weekDays,
-            'typeSaleBreakdown' => $typeSaleBreakdown,
             'paymentBreakdown'  => $paymentBreakdown,
             'todayBirthdaysCount'  => $todayBirthdaysCount,
             'upcomingBirthdays'    => $upcomingBirthdays->values()->all(),
