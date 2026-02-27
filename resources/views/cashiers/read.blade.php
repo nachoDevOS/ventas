@@ -203,7 +203,7 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 30px;"></th>
-                                        <th style="text-align: center; width: 10%">Código</th>
+                                        <th style="text-align: center; width: 100px;">Acciones</th>
                                         <th style="text-align: center;">Cliente</th>
                                         <th style="text-align: center; width: 16%">Fecha</th>
                                         <th style="text-align: center; width: 11%">QR</th>
@@ -236,18 +236,21 @@
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <i class="voyager-angle-down icon-toggle" id="icon-sale-{{ $item->id }}"></i>
                                             </td>
-                                            <td style="text-align: center; vertical-align: middle;" class="no-click">
+                                            <td style="vertical-align: middle;" class="no-sort no-click bread-actions text-right" class="no-click">
+                                                <a href="{{ route('sales.show', ['sale' => $item->id]) }}" target="_blank"
+                                                    title="Ver venta #{{ $item->invoiceNumber ?? $item->id }}"
+                                                    class="btn btn-info btn-xs">
+                                                    <i class="fa fa-eye"></i>
+                                                </a>
                                                 @if ($item->deleted_at == null && $cashier->status == 'Abierta')
                                                     <a href="#"
                                                         onclick="deleteItem('{{ route('sales.destroy', ['sale' => $item->id]) }}')"
                                                         title="Eliminar" data-toggle="modal" data-target="#modal-delete"
-                                                        class="btn btn-sm btn-danger delete">
+                                                        class="btn btn-danger btn-xs delete"
+                                                        style="margin-left: 3px;">
                                                         <i class="voyager-trash"></i>
-                                                    </a><br>
+                                                    </a>
                                                 @endif
-                                                <a href="{{ route('sales.show', ['sale' => $item->id]) }}" target="_blank" title="Ver Venta">
-                                                    {{ $item->invoiceNumber ?? '#'.$item->id }}
-                                                </a>
                                             </td>
                                             <td style="font-size: 11px; vertical-align: middle;">
                                                 @if ($item->person)

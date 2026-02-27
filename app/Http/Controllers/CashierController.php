@@ -9,6 +9,7 @@ use App\Models\CashierDetailCash;
 use App\Models\CashierMovement;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CashierController extends Controller
@@ -219,5 +220,133 @@ class CashierController extends Controller
             return redirect()->route('voyager.dashboard')->with(['message' => 'La caja no puede ser cerrada, tiene transacciones pendiente.', 'alert-type' => 'warning']);
         }   
         return view('cashiers.close', compact('cashier'));
+    }
+
+    public function close_store(Request $request, $id){
+        DB::beginTransaction();
+        $cashier = Cashier::findOrFail($id);
+        if($cashier->status != 'Abierta'){
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+        try {
+            $cashier->closed_at = Carbon::now();
+            $cashier->status = 'Cierre Pendiente';
+            $cashier->amountExpectedClosing = $request->amount_cashier;
+
+            $cashier->amountClosed = $request->amount_real;
+
+            $cashier->amountLeftover = $request->amount_cashier < $request->amount_real ? $request->amount_real - $request->amount_cashier : 0;
+            $cashier->amountMissing = $request->amount_cashier > $request->amount_real ? $request->amount_cashier - $request->amount_real : 0;
+            $cashier->save();
+
+            $detail = CashierDetail::create([
+                'cashier_id' => $cashier->id,
+                'type' => 'Cierre',
+            ]);
+
+            for ($i = 0; $i < count($request->cash_value); $i++) {
+                CashierDetailCash::create([
+                    'cashierDetail_id' => $detail->id,
+                    'cash_value' => $request->cash_value[$i],
+                    'quantity' => $request->quantity[$i],
+                ]);
+            }     
+
+            DB::commit();
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Caja cerrada exitosamente.', 'alert-type' => 'success']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            $this->logError($th, $request);
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+    }
+    public function close_revert(Request $request, $id)
+    {
+        $cashier = Cashier::with(['details'=>function($q){
+            $q->where('deleted_at', NULL)
+            ->where('type', 'Cierre')
+            ->with(['detailCashes']);
+        }])
+        ->where('id', $id)
+        ->first();
+
+        if ($cashier->status != 'Cierre Pendiente') {
+            return redirect()->route('voyager.dashboard')->with(['message' => 'La caja no se encuentra en cierre pendiente.', 'alert-type' => 'error']);
+        }
+        DB::beginTransaction();
+        try {
+
+            $cashier->closed_at = NULL;
+            $cashier->status = 'Abierta';
+            $cashier->amountExpectedClosing = null;
+            $cashier->amountClosed = null;
+            $cashier->amountMissing = null;
+            $cashier->amountLeftover = null;
+            $cashier->save();
+
+            $cashier->details[0]->update([
+                'deleted_at' => Carbon::now()
+            ]);
+
+            foreach ($cashier->details[0]->detailCashes as $item) {
+                $item->update([
+                    'deleted_at' => Carbon::now()
+                ]);
+            }
+            
+
+            DB::commit();
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Caja reabierta exitosamente.', 'alert-type' => 'success']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            $this->logError($th, $request);
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+    }
+
+    public function print($id){
+
+        $cashier = $this->cashier('id = "'.$id.'"', null, null);        
+        return view('cashiers.print-close-details', compact('cashier',));
+    }
+
+    public function confirm_close($id)
+    {
+        $cashier = $this->cashier('id = "'.$id.'"', null, null);    
+        if($cashier->status == 'Cierre Pendiente'){
+            return view('cashiers.confirm_close', compact('cashier'));
+        }else{
+            return redirect()->route('cashiers.index')->with(['message' => 'La caja ya no está abierta.', 'alert-type' => 'warning']);
+        }
+    }
+
+    public function confirm_close_store(Request $request, $id)
+    {
+        // return $id;
+        $cashier = Cashier::findOrFail($id);
+        if($cashier->status != 'Cierre Pendiente'){
+            return redirect()->route('cashiers.index')->with(['message' => 'La caja ya no está abierta.', 'alert-type' => 'warning']);
+        }
+
+
+        DB::beginTransaction();
+        try {
+            $cashier->status = 'Cerrada';
+            $cashier->closeUser_id= Auth::user()->id;
+            $cashier->save();
+            
+
+            DB::commit();
+            return redirect()->route('cashiers.index')->with(['message' => 'Caja cerrada exitosamente.', 'alert-type' => 'success', 'id_cashier_close' => $id]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            $this->logError($th, $request);
+            return redirect()->route('cashiers.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+    }
+
+    public function print_close($id){
+        $cashier = $this->cashier('id = "'.$id.'"', null, null);   
+        return view('cashiers.print-close', compact('cashier'));
     }
 }
