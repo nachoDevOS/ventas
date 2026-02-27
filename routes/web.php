@@ -76,7 +76,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
     Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
 
-    Route::get('items/expiry', [ItemController::class, 'expiry'])->name('items.expiry');
+    Route::get('items/expiry/info', [ItemController::class, 'expiry'])->name('items.expiry');
 
     Route::get('item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
 
