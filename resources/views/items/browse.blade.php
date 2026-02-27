@@ -14,6 +14,9 @@
                             </h1>
                         </div>
                         <div class="col-md-4 text-right" style="margin-top: 30px">
+                            <a href="{{ route('items.expiry') }}" class="btn btn-warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i> <span>Vencimientos</span>
+                            </a>
                             @if (auth()->user()->hasPermission('add_people'))
                             <a href="{{ route('voyager.items.create') }}" class="btn btn-success">
                                 <i class="voyager-plus"></i> <span>Crear</span>
