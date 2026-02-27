@@ -133,15 +133,16 @@
                                 </div>
                                 @endif
 
-                                @if($item->observation)
-                                    <div class="col-md-12" style="margin-top: 4px;">
-                                        <div style="padding: 6px 12px; background: #fffde7;
-                                                    border-left: 3px solid #ffc107; border-radius: 2px;
-                                                    font-size: 12px; color: #7a6000;">
-                                            <i class="fa-solid fa-note-sticky"></i> {{ $item->observation }}
-                                        </div>
+                                <div class="col-md-12" style="margin-top: 4px;">
+                                    <div class="item-info-card" style="background: #fffde7; border-color: #ffe082;">
+                                        <span class="item-info-label">
+                                            <i class="fa-solid fa-note-sticky"></i> Descripción / Observación
+                                        </span>
+                                        <span class="item-info-value" style="color: #7a6000; font-weight: 400; font-size: 13px; white-space: pre-line;">
+                                            {{ $item->observation ?: '—' }}
+                                        </span>
                                     </div>
-                                @endif
+                                </div>
 
                             </div>
                         </div>
