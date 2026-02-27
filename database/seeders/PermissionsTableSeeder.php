@@ -74,6 +74,22 @@ class PermissionsTableSeeder extends Seeder
             ]);
         }
 
+        $permissions = [
+            'browse_cashiers' => 'Ver lista de cajas',
+            'read_cashiers' => 'Ver detalles de cajas',
+            'edit_cashiers' => 'Editar información de cajas',
+            'add_cashiers' => 'Agregar nuevas cajas',
+            'delete_cashiers' => 'Eliminar cajas',
+        ];
+
+        foreach ($permissions as $key => $description) {
+            Permission::firstOrCreate([
+                'key'        => $key,
+                'keyDescription'=> $description,
+                'table_name' => 'cashiers',
+                'tableDescription'=>'Cajas'
+            ]);
+        }
 
         $permissions = [
             'browse_sales' => 'Ver lista de ventas',

@@ -581,64 +581,7 @@ class SaleController extends Controller
         DB::beginTransaction();
         try {
 
-            foreach ($sale->saleDetails as $detail) {
-                $itemStock = ItemStock::findOrFail($detail->itemStock_id);
-
-                if ($detail->dispensed == 'Entero') {
-                    $itemStock->increment('stock', $detail->quantity);
-                    $detail->delete();
-                } 
-                elseif ($detail->dispensed == 'Fraccionado' && $detail->itemStockFraction) {
-                        // Si es fracción, eliminamos el registro de fracción (soft delete)
-                    $detail->itemStockFraction->delete();
-
-                    $itemStockUnit = SaleDetail::with(['sale'])
-                        ->whereHas('sale', function ($q) {
-                            $q->where('deleted_at', null);
-                        })
-                        ->where('itemStock_id',$detail->itemStock_id)
-                        ->where('dispensed','Entero')
-                        ->where('deleted_at', null)
-                        ->get()->sum('quantity');
-
-                    $dispensationAnamnesisForm = Dispensation::with(['anamnesisForm'])
-                        ->whereHas('anamnesisForm', function ($q) {
-                            $q->where('deleted_at', null);
-                        })
-                        ->where('itemStock_id',$detail->itemStock_id)
-                        ->where('dispensed','Entero')
-                        ->where('deleted_at', null)
-                        ->get()
-                        ->sum('quantity');
-
-                    $dispensationVaccinationRecord = Dispensation::with(['vaccinationRecord'])
-                        ->whereHas('vaccinationRecord', function ($q) {
-                            $q->where('deleted_at', null);
-                        })
-                        ->where('itemStock_id',$detail->itemStock_id)
-                        ->where('dispensed','Entero')
-                        ->where('deleted_at', null)
-                        ->get()
-                        ->sum('quantity');
-
-                    $dispensationDeworming = Dispensation::with(['deworming'])
-                        ->whereHas('deworming', function ($q) {
-                            $q->where('deleted_at', null);
-                        })
-                        ->where('itemStock_id',$detail->itemStock_id)
-                        ->where('dispensed','Entero')
-                        ->where('deleted_at', null)
-                        ->get()
-                        ->sum('quantity');
-
-                    $itemStock->update([
-                        'stock' => $itemStock->quantity
-                    ]);
-                    $itemStock->decrement('stock', ($itemStockUnit+$dispensationAnamnesisForm+$dispensationVaccinationRecord+$dispensationDeworming));
-                    $detail->delete();   
-                }
-            }
-
+            $this->destroyDispensation($sale->saleDetails);
 
             $sale->delete();
             DB::commit();

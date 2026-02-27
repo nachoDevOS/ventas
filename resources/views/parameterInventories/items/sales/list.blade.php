@@ -32,6 +32,14 @@
                                 <i class="voyager-watch"></i> Pendiente
                             </span>
                         @endif
+                        <div style="margin-top: 5px;">
+                            <a href="{{ route('sales.show', $det->sale->id) }}"
+                               target="_blank"
+                               title="Ver detalle de venta"
+                               class="btn btn-xs btn-warning">
+                                <i class="voyager-eye"></i> Ver
+                            </a>
+                        </div>
                     </td>
 
                     {{-- Cliente --}}
