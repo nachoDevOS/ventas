@@ -173,7 +173,6 @@
     </script>
     <script src="{{ asset('js/cash_value.js') }}"></script>
     <script src="{{ asset('js/btn-submit.js') }}"></script>    
-
     <script src="{{ asset('js/input-numberBlock.js') }}"></script>
 
     <script>
