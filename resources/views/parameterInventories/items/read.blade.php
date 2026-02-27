@@ -43,7 +43,7 @@
                                 $image = $item->image ? Voyager::image($item->image) : asset('images/default.jpg');
                             @endphp
                             <img src="{{ $image }}"
-                                 style="width: 200px; height: 200px; object-fit: cover;
+                                 style="width: 180px; height: 180px; object-fit: cover;
                                         border-radius: 6px; border: 2px solid #eee;"
                                  alt="{{ $item->nameTrade ?? $item->nameGeneric }}">
                             <div style="margin-top: 5px;">

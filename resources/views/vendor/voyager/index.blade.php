@@ -71,19 +71,19 @@
 
         <!-- KPI Cards -->
         <div class="row">
-            {{-- <div class="col-md-3 col-sm-6">
+            <div class="col-md-3 col-sm-6">
                 <a href="{{ route('sales.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
                     <div class="panel-body">
-                        <div class="kpi-icon">
-                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        <div class="kpi-icon" style="background-color: rgba(80,227,194,0.12);">
+                            <i class="fa-solid fa-hand-holding-dollar" style="color: #27ae60;"></i>
                         </div>
                         <div class="kpi-content">
-                            <p class="kpi-label">Ventas Total del Día</p>
+                            <p class="kpi-label">Ventas del Día</p>
                             <h3 class="kpi-value">Bs. {{ number_format($global_index['amountDaytotal'], 2, ',', '.') }}</h3>
                         </div>
                     </div>
                 </a>
-            </div> --}}
+            </div>
             <div class="col-md-3 col-sm-6">
                 <div class="panel panel-bordered dashboard-kpi">
                     <div class="panel-body">
@@ -91,14 +91,11 @@
                             <i class="fa-regular fa-bell"></i>
                         </div>
                         <div class="kpi-content">
-                            <p class="kpi-label">Recordatorios de hoy</p>
+                            <p class="kpi-label">Recordatorios de Hoy</p>
                             <h3 class="kpi-value">{{ $global_index['reminder'] }}</h3>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                
             </div>
             <div class="col-md-3 col-sm-6">
                 <a href="{{ route('voyager.people.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
@@ -116,8 +113,8 @@
             <div class="col-md-3 col-sm-6">
                 <div class="panel panel-bordered dashboard-kpi">
                     <div class="panel-body">
-                        <div class="kpi-icon">
-                            <i class="fa-solid fa-cake-candles"></i>
+                        <div class="kpi-icon" style="background-color: rgba(255,193,7,0.12);">
+                            <i class="fa-solid fa-cake-candles" style="color: #e67e22;"></i>
                         </div>
                         <div class="kpi-content">
                             <p class="kpi-label">Cumpleaños de Hoy</p>
@@ -523,10 +520,84 @@
                                 </div>
                             </div>
                             <div id="birthdays_tab" class="tab-pane fade">
-                            
+                                @php
+                                    $upcomingBirthdays = $global_index['upcomingBirthdays'] ?? [];
+                                    $todayMD = \Carbon\Carbon::today()->format('m-d');
+                                @endphp
+                                @if(count($upcomingBirthdays) > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" style="margin-bottom: 0;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Cliente</th>
+                                                    <th>Cumpleaños</th>
+                                                    <th>Días restantes</th>
+                                                    <th>Teléfono</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($upcomingBirthdays as $bday)
+                                                    @php
+                                                        $birthDate  = \Carbon\Carbon::parse($bday->birth_date);
+                                                        $isToday    = $birthDate->format('m-d') === $todayMD;
+                                                        $nextBday   = \Carbon\Carbon::parse($bday->next_birthday);
+                                                        $daysUntil  = (int) \Carbon\Carbon::today()->diffInDays($nextBday);
+                                                        $fullName   = trim(implode(' ', array_filter([
+                                                            $bday->first_name,
+                                                            $bday->paternal_surname,
+                                                            $bday->maternal_surname,
+                                                        ])));
+                                                        $age = $birthDate->age;
+                                                    @endphp
+                                                    <tr style="{{ $isToday ? 'background-color: #fffde7;' : '' }}">
+                                                        <td>
+                                                            <strong>{{ $fullName }}</strong>
+                                                            @if($isToday)
+                                                                <span class="label label-warning" style="margin-left: 6px;">
+                                                                    <i class="fa-solid fa-cake-candles"></i> ¡Hoy cumple {{ $age }} años!
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $birthDate->format('d \d\e M') }}</td>
+                                                        <td>
+                                                            @if($isToday)
+                                                                <span class="label label-warning">¡Hoy!</span>
+                                                            @elseif($daysUntil <= 7)
+                                                                <span class="label label-info">{{ $daysUntil }} {{ $daysUntil === 1 ? 'día' : 'días' }}</span>
+                                                            @else
+                                                                <span class="text-muted">{{ $daysUntil }} días</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($bday->phone)
+                                                                <a href="tel:{{ $bday->phone }}" style="color: inherit;">
+                                                                    <i class="fa-solid fa-phone" style="margin-right:4px; color: #27ae60;"></i>{{ $bday->phone }}
+                                                                </a>
+                                                            @else
+                                                                <span class="text-muted">—</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center" style="padding: 50px 0; color: #ccc;">
+                                        <i class="fa-solid fa-cake-candles" style="font-size: 3rem;"></i>
+                                        <p style="margin-top: 15px; font-size: 1rem;">No hay próximos cumpleaños registrados.</p>
+                                    </div>
+                                @endif
                             </div>
                             <div id="reminders_tab" class="tab-pane fade">
-                      
+                                @if($global_index['reminder'] > 0)
+                                    <p class="text-muted">Tienes {{ $global_index['reminder'] }} recordatorio(s) para hoy.</p>
+                                @else
+                                    <div class="text-center" style="padding: 50px 0; color: #ccc;">
+                                        <i class="fa-regular fa-bell" style="font-size: 3rem;"></i>
+                                        <p style="margin-top: 15px; font-size: 1rem;">No tienes recordatorios para hoy.</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
