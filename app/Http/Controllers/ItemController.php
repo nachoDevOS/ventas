@@ -10,6 +10,7 @@ use App\Http\Controllers\StorageController;
 use App\Models\IncomeDetail;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
+use App\Models\ItemStockFraction;
 
 class ItemController extends Controller
 {
@@ -244,29 +245,75 @@ class ItemController extends Controller
 
         DB::beginTransaction();
         try {
-            ItemStock::create([
-                'item_id' => $id,
-                'lote'=>$request->lote,
-                'quantity' =>  $request->quantity,
-                'stock' => $request->quantity,
-                'pricePurchase' => $request->pricePurchase,
-                'priceSale' => $request->priceSale,
-                'expirationDate'=> $request->expirationDate,
+            if ($item->fraction && $item->fractionQuantity > 0) {
+                // Item fraccionado: acepta unidades enteras + fracciones adicionales
+                $wholeUnits     = max(0, intval($request->quantity ?? 0));
+                $extraFractions = max(0, intval($request->extraFractions ?? 0));
+                $totalFractions = ($wholeUnits * $item->fractionQuantity) + $extraFractions;
 
-                'dispensed' => $request->dispensedPrice ?'Fraccionado':'Entero',
-                'dispensedQuantity'=> $item->fractionQuantity??null,
-                'dispensedPrice' => $request->dispensedPrice??null,
+                if ($totalFractions <= 0) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['message' => 'Debe ingresar al menos una unidad o fracción.', 'alert-type' => 'error'])
+                        ->withInput();
+                }
 
-                'type' => 'Ingreso',
-                'observation' => $request->observation,
-            ]);
+                // Redondear hacia arriba para obtener unidades enteras a almacenar
+                $storedUnits = (int) ceil($totalFractions / $item->fractionQuantity);
+                // Fracciones que sobran al redondear (para pre-descontar)
+                $preDeducted = ($storedUnits * $item->fractionQuantity) - $totalFractions;
+
+                $stockRecord = ItemStock::create([
+                    'item_id'           => $id,
+                    'lote'              => $request->lote,
+                    'quantity'          => $storedUnits,
+                    'stock'             => $storedUnits,
+                    'pricePurchase'     => $request->pricePurchase,
+                    'priceSale'         => $request->priceSale,
+                    'expirationDate'    => $request->expirationDate,
+                    'dispensed'         => $request->dispensedPrice ? 'Fraccionado' : 'Entero',
+                    'dispensedQuantity' => $item->fractionQuantity,
+                    'dispensedPrice'    => $request->dispensedPrice ?? null,
+                    'type'              => 'Ingreso',
+                    'observation'       => $request->observation,
+                ]);
+
+                // Si hay fracciones de diferencia por el redondeo, crear pre-descuento
+                if ($preDeducted > 0) {
+                    ItemStockFraction::create([
+                        'itemStock_id' => $stockRecord->id,
+                        'quantity'     => $preDeducted,
+                        'price'        => 0,
+                        'amount'       => 0,
+                    ]);
+                }
+            } else {
+                // Item sin fracción: registro normal
+                ItemStock::create([
+                    'item_id'           => $id,
+                    'lote'              => $request->lote,
+                    'quantity'          => $request->quantity,
+                    'stock'             => $request->quantity,
+                    'pricePurchase'     => $request->pricePurchase,
+                    'priceSale'         => $request->priceSale,
+                    'expirationDate'    => $request->expirationDate,
+                    'dispensed'         => $request->dispensedPrice ? 'Fraccionado' : 'Entero',
+                    'dispensedQuantity' => $item->fractionQuantity ?? null,
+                    'dispensedPrice'    => $request->dispensedPrice ?? null,
+                    'type'              => 'Ingreso',
+                    'observation'       => $request->observation,
+                ]);
+            }
+
             DB::commit();
-            return redirect()->route('voyager.items.show', ['id'=>$id])->with(['message' => 'Registrado exitosamente.', 'alert-type' => 'success']);
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Registrado exitosamente.', 'alert-type' => 'success']);
 
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->route('voyager.items.show',  ['id'=>$id])->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
-        } 
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Ocurrió un error: ' . $e->getMessage(), 'alert-type' => 'error']);
+        }
     }
 
     public function listSales($id)

@@ -285,11 +285,34 @@
                                             <input type="date" id="expirationDate" name="expirationDate" class="form-control"
                                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                         </div>
+                                        @if ($item->fraction)
+                                        {{-- Item fraccionado: campo unidades + fracciones adicionales --}}
+                                        <div class="form-group col-md-2">
+                                            <label>{{ strtoupper($item->presentation->name ?? 'Unidades') }}</label>
+                                            <input style="text-align:right" type="number" id="quantity"
+                                                   step="1" min="0" name="quantity" class="form-control"
+                                                   value="0" placeholder="0" oninput="updateStockSummary()">
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>{{ strtoupper($item->fractionPresentation->name ?? 'Fracciones') }} adicionales</label>
+                                            <input style="text-align:right" type="number" id="extraFractions"
+                                                   step="1" min="0" name="extraFractions" class="form-control"
+                                                   value="0" placeholder="0" oninput="updateStockSummary()">
+                                        </div>
+                                        <div class="col-md-2" style="padding-top: 26px;">
+                                            <div id="stock-summary" style="background:#f0fdf4; border:1px solid #c8e6c9;
+                                                                            border-radius:5px; padding:6px 8px; font-size:12px;">
+                                                Total: <b id="summary-text" style="color:#1565c0;">—</b>
+                                            </div>
+                                        </div>
+                                        @else
+                                        {{-- Item sin fracción: campo único --}}
                                         <div class="form-group col-md-3">
                                             <label>Cantidad</label>
                                             <input style="text-align:right" type="number" id="quantity"
                                                    step="1" min="1" name="quantity" class="form-control" required placeholder="0">
                                         </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -460,9 +483,23 @@
                 }
             });
 
-            $('.form-submit').submit(function () {
+            @if ($item->fraction)
+            updateStockSummary();
+            $('.form-submit').submit(function (e) {
+                let units  = parseInt($('#quantity').val()) || 0;
+                let fracs  = parseInt($('#extraFractions').val()) || 0;
+                if ((units + fracs) <= 0) {
+                    e.preventDefault();
+                    toastr.error('Debe ingresar al menos una unidad o fracción.', 'Cantidad inválida');
+                    return false;
+                }
                 $('.btn-form-submit').attr('disabled', true).val('Guardando...');
             });
+        @else
+        $('.form-submit').submit(function () {
+                $('.btn-form-submit').attr('disabled', true).val('Guardando...');
+            });
+        @endif
             $('#delete_form').submit(function () {
                 $('.btn-form-delete').attr('disabled', true).val('Eliminando...');
             });
@@ -482,6 +519,37 @@
                 }
             });
         }
+
+        @if ($item->fraction)
+        function updateStockSummary() {
+            const fracQty  = {{ $item->fractionQuantity }};
+            const unitName = '{{ strtoupper($item->presentation->name ?? "Unid.") }}';
+            const fracName = '{{ strtoupper($item->fractionPresentation->name ?? "Frac.") }}';
+            const units    = parseInt($('#quantity').val()) || 0;
+            const fracs    = parseInt($('#extraFractions').val()) || 0;
+            const total    = (units * fracQty) + fracs;
+
+            if (total <= 0) {
+                $('#summary-text').text('—');
+                return;
+            }
+
+            const storedUnits = Math.ceil(total / fracQty);
+            const remaining   = (storedUnits * fracQty) - total;
+            let text = '';
+            const fullUnits = Math.floor(total / fracQty);
+            const leftOver  = total % fracQty;
+
+            if (fullUnits > 0 && leftOver > 0) {
+                text = `${fullUnits} ${unitName} + ${leftOver} ${fracName}`;
+            } else if (fullUnits > 0) {
+                text = `${fullUnits} ${unitName}`;
+            } else {
+                text = `${leftOver} ${fracName}`;
+            }
+            $('#summary-text').text(text);
+        }
+        @endif
 
         function listSales(page = 1) {
             $('#div-results-direct-sales').loading({ message: 'Cargando...' });
