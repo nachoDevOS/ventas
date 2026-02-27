@@ -98,17 +98,7 @@
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <a href="{{ route('voyager.pets.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
-                    <div class="panel-body">
-                        <div class="kpi-icon">
-                            <i class="voyager-paw"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <p class="kpi-label">Mascotas</p>
-                            <h3 class="kpi-value">{{ $global_index['pet']}}</h3>
-                        </div>
-                    </div>
-                </a>
+                
             </div>
             <div class="col-md-3 col-sm-6">
                 <a href="{{ route('voyager.people.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
@@ -180,7 +170,7 @@
                                                     <div class="panel panel-bordered" style="border: 1px solid #f1f1f1; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                                                         <div class="panel-body text-center" style="padding: 15px 5px;">
                                                             <small class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Efectivo</small>
-                                                            <h4 class="text-success" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountCashier'], 2, ',', '.') }} <small>Bs.</small></h4>
+                                                            <h4 class="text-success" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountEfectivoCashier'], 2, ',', '.') }} <small>Bs.</small></h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -188,7 +178,7 @@
                                                     <div class="panel panel-bordered" style="border: 1px solid #f1f1f1; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                                                         <div class="panel-body text-center" style="padding: 15px 5px;">
                                                             <small class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Qr</small>
-                                                            <h4 class="text-info" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountQr'], 2, ',', '.') }} <small>Bs.</small></h4>
+                                                            <h4 class="text-info" style="margin: 5px 0 0; font-weight: 700;">{{ number_format($globalFuntion_cashierMoney['amountQrCashier'], 2, ',', '.') }} <small>Bs.</small></h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -200,11 +190,11 @@
                                                     <tbody>
                                                         <tr>
                                                             <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-arrow-trend-up text-success" style="margin-right: 10px;"></i> Ingreso Efectivo</td>
-                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentEfectivo'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentEfectivoIngreso'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
                                                         </tr>
                                                         <tr>
                                                             <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-qrcode text-info" style="margin-right: 10px;"></i> Ingreso Qr</td>
-                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentQr'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
+                                                            <td class="text-right" style="border-top: 1px solid #f1f1f1;"><strong>{{ number_format($globalFuntion_cashierMoney['paymentQrIngreso'], 2, ',', '.') }}</strong> <small>Bs.</small></td>
                                                         </tr>
                                                         <tr>
                                                             <td style="border-top: 1px solid #f1f1f1;"><i class="fa-solid fa-arrow-trend-down text-danger" style="margin-right: 10px;"></i> Egreso Efectivo</td>
@@ -533,10 +523,10 @@
                                 </div>
                             </div>
                             <div id="birthdays_tab" class="tab-pane fade">
-                                @include('vendor.voyager.partials.listBirthday')
+                            
                             </div>
                             <div id="reminders_tab" class="tab-pane fade">
-                                @include('vendor.voyager.partials.listReminder')
+                      
                             </div>
                         </div>
                     </div>
@@ -744,6 +734,7 @@
 
 @section('javascript')
     <script src="{{ asset('js/qrious.js') }}"></script>
+    <script src="{{ asset('js/input-numberBlock.js') }}"></script>
     {{-- Socket.io --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.js" integrity="sha512-nYuHvSAhY5lFZ4ixSViOwsEKFvlxHMU2NHts1ILuJgOS6ptUmAGt/0i5czIgMOahKZ6JN84YFDA+mCdky7dD8A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
@@ -886,7 +877,7 @@
                         datasets: [{
                             label: 'Bs.',
                             data: [
-                                "{{ $globalFuntion_cashierMoney['paymentEfectivo'] + $globalFuntion_cashierMoney['paymentQr'] }}", // Ventas Efectivo
+                                "{{ $globalFuntion_cashierMoney['paymentEfectivoIngreso'] + $globalFuntion_cashierMoney['paymentQrIngreso'] }}", // Ventas Efectivo
             
                                 "{{ $globalFuntion_cashierMoney['paymentEfectivoEgreso'] + $globalFuntion_cashierMoney['paymentQrEgreso'] }}", // Gastos
                             ],

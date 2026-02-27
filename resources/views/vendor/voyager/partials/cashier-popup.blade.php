@@ -27,12 +27,12 @@
                     <div class="pro-balance-summary">
                         <small><i class="fa-solid fa-money-bill"></i> Disponible</small>
                         <span class="total-amount">
-                            {{ number_format($globalFuntion_cashierMoney['amountCashier'], 2, ',', '.') }}</span>
+                            {{ number_format($globalFuntion_cashierMoney['amountEfectivoCashier'], 2, ',', '.') }}</span>
                     </div>
                     <div class="pro-balance-summary">
                         <small><i class="fa-solid fa-qrcode"></i> Disponible</small>
                         <span class="total-amount">
-                            {{ number_format($globalFuntion_cashierMoney['amountQr'], 2, ',', '.') }}</span>
+                            {{ number_format($globalFuntion_cashierMoney['amountQrCashier'], 2, ',', '.') }}</span>
                     </div>
                 </div>
                 <ul class="pro-balance-details">
@@ -42,7 +42,7 @@
                             Ingreso Efectivo
                         </div>
                         <span class="detail-amount income">+ Bs.
-                            {{ number_format($globalFuntion_cashierMoney['paymentEfectivo'], 2, ',', '.') }}</span>
+                            {{ number_format($globalFuntion_cashierMoney['paymentEfectivoIngreso'], 2, ',', '.') }}</span>
                     </li>
                     <li>
                         <div class="detail-label">
@@ -50,7 +50,7 @@
                             Ingreso Qr
                         </div>
                         <span class="detail-amount income">+ Bs.
-                            {{ number_format($globalFuntion_cashierMoney['paymentQr'], 2, ',', '.') }}</span>
+                            {{ number_format($globalFuntion_cashierMoney['paymentQrIngreso'], 2, ',', '.') }}</span>
                     </li>
                     <li>
                         <div class="detail-label">

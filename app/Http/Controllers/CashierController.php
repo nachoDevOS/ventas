@@ -8,6 +8,7 @@ use App\Models\CashierDetail;
 use App\Models\CashierDetailCash;
 use App\Models\CashierMovement;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CashierController extends Controller
@@ -122,5 +123,77 @@ class CashierController extends Controller
     {
         $cashier = $this->cashier('id = "'.$id.'"', null, null);        
         return view('cashiers.read' , compact('cashier'));
+    }
+
+    //*** Para que los cajeros Acepte o rechase el dinero dado por Boveda o gerente
+    public function change_status($id, Request $request){
+        DB::beginTransaction();
+        
+        try {
+            if($request->status == 'Abierta'){
+                $message = 'Caja aceptada exitosamente.';
+                Cashier::where('id', $id)->update([
+                    'status' => $request->status,
+                    'view' => Carbon::now()
+                ]);
+            }else{
+                $message = 'Caja rechazada exitosamente.';
+                $cashier = Cashier::with(['movements' => function($q){
+                            $q->where('deleted_at', NULL);
+                        },
+                        'details' => function($q){
+                            $q->where('deleted_at', NULL);
+                        },
+                        'details.detailCashes' => function($q){
+                            $q->where('deleted_at', NULL);
+                        }
+                    ])
+                ->where('id', $id)->first();
+
+                foreach ($cashier->movements as $value) {
+                    $value->update([
+                        'deleted_at' => Carbon::now(),
+                        'status' => 'Rechazado'
+                    ]);
+                }
+
+                foreach ($cashier->details as $value) {
+                    $value->update([
+                        'deleted_at' => Carbon::now(),
+                    ]);
+                    foreach ($value->detailCashes as $item) {
+                        $item->update([
+                            'deleted_at' => Carbon::now()
+                        ]);
+                    }
+                }               
+                $cashier->update([
+                    'status' => 'Rechazado',
+                    'view' => Carbon::now(),
+                    'deleted_at' => Carbon::now()
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('voyager.dashboard')->with(['message' => $message, 'alert-type' => 'success']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            // $this->logError($th, $request);
+            return redirect()->route('voyager.dashboard')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+        }
+    }
+
+    //***para cerrar la caja el cajero vista 
+    public function close($id)
+    {
+        $cashier = $this->cashier('id = "'.$id.'"', null, 'status = "Abierta"');        
+
+        if (!$cashier) {
+            return redirect()->route('voyager.dashboard')->with(['message' => 'La caja no se encuentra abierta.', 'alert-type' => 'warning']);
+        }
+        if (count($cashier->movements->where('deleted_at', null)->where('status', 'Pendiente'))>0) {
+            return redirect()->route('voyager.dashboard')->with(['message' => 'La caja no puede ser cerrada, tiene transacciones pendiente.', 'alert-type' => 'warning']);
+        }   
+        return view('cashiers.close', compact('cashier'));
     }
 }

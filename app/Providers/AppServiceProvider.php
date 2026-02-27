@@ -64,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
         // Solo Para la vista Index
         View::composer('voyager::index', function ($view) {
             $global_index = new IndexController();
-            $view->with('global_index', $global_index->IndexSystem(null)->original);
+            $view->with('global_index', $global_index->IndexSystem()->original);
 
             $globalFuntion_cashier = new Controller();
             $view->with('globalFuntion_cashier', $globalFuntion_cashier->cashier(null, Auth::check() ? 'user_id = "'.Auth::user()->id.'"' : null, 'status <> "Cerrada"'));
