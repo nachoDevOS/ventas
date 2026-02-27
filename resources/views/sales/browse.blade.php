@@ -33,36 +33,27 @@
             <div class="col-md-12">
                 <div class="panel panel-bordered">
                     <div class="panel-body">
-                        <div class="row" style="margin-bottom: 5px;">
-                            <div class="col-sm-3">
+                        {{-- Select oculto requerido por el JS --}}
+                        <select id="typeSale" style="display: none;">
+                            <option value="">— Todos los tipos —</option>
+                            <option value="Venta al Contado">Venta al Contado</option>
+                            <option value="Venta al Credito">Venta al Crédito</option>
+                            <option value="Proforma">Proforma</option>
+                        </select>
+
+                        <div class="row">
+                            <div class="col-sm-9">
                                 <div class="dataTables_length" id="dataTable_length">
-                                    <label style="font-weight: normal; margin-bottom: 0;">Mostrar
-                                        <select id="select-paginate" class="form-control input-sm" style="display:inline-block; width:auto;">
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                        </select> registros
-                                    </label>
+                                    <label>Mostrar <select id="select-paginate" class="form-control input-sm">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select> registros</label>
                                 </div>
                             </div>
-                            <div class="col-sm-4">
-                                <select id="typeSale" class="form-control input-sm">
-                                    <option value="">— Todos los tipos —</option>
-                                    <option value="Venta al Contado">Venta al Contado</option>
-                                    <option value="Venta al Credito">Venta al Crédito</option>
-                                    <option value="Proforma">Proforma</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-5" style="margin-bottom: 10px;">
-                                <div class="input-group">
-                                    <input type="text" id="input-search" placeholder="🔍 Buscar por ID o código..." class="form-control">
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-default" type="button" onclick="list()">
-                                            <i class="fa-solid fa-search"></i>
-                                        </button>
-                                    </span>
-                                </div>
+                            <div class="col-sm-3" style="margin-bottom: 10px">
+                                <input type="text" id="input-search" placeholder="🔍 Buscar..." class="form-control">
                             </div>
                         </div>
                         <div class="row" id="div-results" style="min-height: 120px"></div>
