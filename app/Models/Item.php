@@ -24,6 +24,8 @@ class Item extends Model
         'observation',
         'status',
 
+        'stockMinimum',
+
         'fraction',
         'fractionPresentation_id',
         'fractionQuantity',

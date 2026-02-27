@@ -33,7 +33,7 @@ class ItemController extends Controller
             ->select('category_id')
             ->groupBy('category_id')
             ->get();
-        
+
         $laboratories = Item::with(['laboratory'])
             ->whereHas('laboratory', function($q){
                 $q->where('deleted_at', null);
@@ -43,7 +43,13 @@ class ItemController extends Controller
             ->groupBy('laboratory_id')
             ->get();
 
-        return view('items.browse', compact('laboratories', 'categories'));
+        $lowStockCount = Item::where('deleted_at', null)
+            ->whereNotNull('stockMinimum')
+            ->where('stockMinimum', '>', 0)
+            ->whereRaw('(SELECT COALESCE(SUM(stock), 0) FROM item_stocks WHERE item_id = items.id AND deleted_at IS NULL) < stockMinimum')
+            ->count();
+
+        return view('items.browse', compact('laboratories', 'categories', 'lowStockCount'));
     }
 
     public function list(){
@@ -52,13 +58,13 @@ class ItemController extends Controller
         $laboratory_id = request('laboratory') ?? null;
         $category_id = request('category') ?? null;
         $status = request('status') ?? null;
+        $stockBajo = request('stockBajo') ?? null;
         $user = Auth::user();
 
         $data = Item::with(['laboratory', 'presentation', 'fractionPresentation', 'category', 'line', 'itemStocks'=>function($q)use($user){
                             $q->where('deleted_at', null);
                             $q->where('stock', '>', 0);
                             $q->with('itemStockFractions');
-                            // ->whereRaw($user->branch_id? "branch_id = $user->branch_id" : 1);
                         }])
                         ->where(function($query) use ($search){
                             $query->OrwhereHas('laboratory', function($query) use($search){
@@ -88,6 +94,11 @@ class ItemController extends Controller
                                     $q->where('stock', '>', 0)->where('deleted_at', null);
                                 });
                             }
+                        })
+                        ->when($stockBajo == '1', function($q){
+                            $q->whereNotNull('stockMinimum')
+                              ->where('stockMinimum', '>', 0)
+                              ->whereRaw('(SELECT COALESCE(SUM(stock), 0) FROM item_stocks WHERE item_id = items.id AND deleted_at IS NULL) < stockMinimum');
                         })
                         ->orderBy('id', 'DESC')
                         ->paginate($paginate);
@@ -363,6 +374,16 @@ class ItemController extends Controller
         ];
 
         return view('items.expiry', compact('stocks', 'counts'));
+    }
+
+    public function updateMinimum(Request $request, $id)
+    {
+        $this->custom_authorize('edit_items');
+        $item = Item::findOrFail($id);
+        $item->stockMinimum = $request->stockMinimum ?: null;
+        $item->save();
+        return redirect()->route('voyager.items.show', ['id' => $id])
+            ->with(['message' => 'Stock mínimo actualizado.', 'alert-type' => 'success']);
     }
 
     public function destroyStock($id, $stock)

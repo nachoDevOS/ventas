@@ -153,6 +153,105 @@
     </div>
 
     {{-- ══════════════════════════════════════════════════
+         STOCK MÍNIMO
+    ══════════════════════════════════════════════════ --}}
+    @php
+        $totalStockItem = $item->itemStocks()->where('deleted_at', null)->sum('stock');
+        $isBelowMin = $item->stockMinimum && $item->stockMinimum > 0 && $totalStockItem < $item->stockMinimum;
+    @endphp
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-bordered" style="margin-bottom: 10px;
+                 {{ $isBelowMin ? 'border-color: #e74c3c;' : '' }}">
+                <div class="panel-body" style="padding: 10px 15px;">
+                    <div class="row" style="display: flex; align-items: center;">
+
+                        {{-- Ícono + título --}}
+                        <div class="col-md-1 text-center" style="padding-top: 4px;">
+                            <i class="fa-solid fa-gauge-high" style="font-size: 28px;
+                               color: {{ $isBelowMin ? '#c0392b' : '#27ae60' }};"></i>
+                        </div>
+
+                        {{-- Info actual --}}
+                        <div class="col-md-4">
+                            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Stock mínimo configurado
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700;
+                                        color: {{ $isBelowMin ? '#c0392b' : '#2c3e50' }};">
+                                {{ $item->stockMinimum ? number_format($item->stockMinimum, 0, ',', '.') . ' ' . ($item->presentation->name ?? 'Unid.') : '—  Sin configurar' }}
+                            </div>
+                            @if ($item->stockMinimum)
+                                @if ($isBelowMin)
+                                    <span style="color:#c0392b; font-size:12px;">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                        Stock actual ({{ $totalStockItem }}) está por debajo del mínimo
+                                    </span>
+                                @else
+                                    <span style="color:#27ae60; font-size:12px;">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Stock actual ({{ $totalStockItem }}) sobre el mínimo
+                                    </span>
+                                @endif
+                            @else
+                                <span style="color:#aaa; font-size:12px;">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Configure un mínimo para recibir alertas
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- Barra de progreso --}}
+                        @if ($item->stockMinimum > 0)
+                        <div class="col-md-4" style="padding-top: 4px;">
+                            @php
+                                $pct = min(100, ($totalStockItem / $item->stockMinimum) * 100);
+                                $barColor = $pct < 50 ? '#e74c3c' : ($pct < 100 ? '#f39c12' : '#27ae60');
+                            @endphp
+                            <div style="font-size: 10px; color:#888; margin-bottom: 4px;">
+                                {{ number_format($pct, 0) }}% del mínimo
+                            </div>
+                            <div style="background:#eee; border-radius: 4px; height: 8px; overflow:hidden;">
+                                <div style="width: {{ $pct }}%; background: {{ $barColor }}; height: 100%; border-radius: 4px; transition: width 0.4s;"></div>
+                            </div>
+                        </div>
+                        @else
+                        <div class="col-md-4"></div>
+                        @endif
+
+                        {{-- Formulario para editar --}}
+                        @if (auth()->user()->hasPermission('edit_items'))
+                        <div class="col-md-3 text-right">
+                            <form action="{{ route('items.update.minimum', ['id' => $item->id]) }}" method="POST"
+                                  style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                @csrf
+                                @method('PATCH')
+                                <div class="input-group" style="max-width: 160px;">
+                                    <input type="number" name="stockMinimum" class="form-control input-sm"
+                                           value="{{ $item->stockMinimum ?? '' }}"
+                                           min="0" step="1" placeholder="0"
+                                           style="text-align: right;">
+                                    <span class="input-group-addon" style="font-size: 11px;">
+                                        {{ $item->presentation->name ?? 'Unid.' }}
+                                    </span>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                </button>
+                            </form>
+                            <div style="font-size: 10px; color: #aaa; margin-top: 4px; text-align: right;">
+                                Dejar vacío para quitar la alerta
+                            </div>
+                        </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════
          TABS: Inventario + Ventas
     ══════════════════════════════════════════════════ --}}
     <div class="row">

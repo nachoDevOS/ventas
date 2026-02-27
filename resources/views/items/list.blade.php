@@ -21,8 +21,9 @@
                         // Stock total
                         $totalStock = $item->itemStocks->sum('stock');
                         $hasStock   = $totalStock > 0;
+                        $isBelowMin = $item->stockMinimum && $item->stockMinimum > 0 && $totalStock < $item->stockMinimum;
                     @endphp
-                    <tr>
+                    <tr style="{{ $isBelowMin ? 'background: #fff8f8;' : '' }}">
                         {{-- ID --}}
                         <td style="text-align: center; vertical-align: middle; color: #999; font-size: 11px;">
                             {{ $item->id }}
@@ -83,16 +84,33 @@
                         </td>
 
                         {{-- Inventario --}}
-                        <td style="vertical-align: middle; padding: 6px;">
+                        <td style="vertical-align: middle; padding: 6px; {{ $isBelowMin ? 'border-left: 3px solid #c0392b;' : '' }}">
                             {{-- Resumen total --}}
-                            <div style="margin-bottom: 5px;">
-                                <span style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.4px;">
-                                    Stock total:
+                            <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span>
+                                    <span style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.4px;">
+                                        Stock total:
+                                    </span>
+                                    <span style="font-weight: 700; font-size: 12px;
+                                                 color: {{ $isBelowMin ? '#c0392b' : ($hasStock ? '#27ae60' : '#e74c3c') }};">
+                                        {{ $totalStock }} {{ $item->presentation->name ?? 'Unid.' }}
+                                    </span>
                                 </span>
-                                <span style="font-weight: 700; font-size: 12px;
-                                             color: {{ $hasStock ? '#27ae60' : '#e74c3c' }};">
-                                    {{ $totalStock }} {{ $item->presentation->name ?? 'Unid.' }}
-                                </span>
+                                @if ($isBelowMin)
+                                    <span style="display:inline-flex; align-items:center; gap:4px;
+                                                 background:#c0392b; color:#fff; border-radius:12px;
+                                                 padding:2px 8px; font-size:10px; font-weight:600;">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                        Bajo mínimo ({{ number_format($item->stockMinimum, 0) }})
+                                    </span>
+                                @elseif ($item->stockMinimum > 0)
+                                    <span style="display:inline-flex; align-items:center; gap:4px;
+                                                 background:#eafaf1; color:#27ae60; border-radius:12px;
+                                                 padding:2px 8px; font-size:10px; border:1px solid #a9dfbf;">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                        Mín: {{ number_format($item->stockMinimum, 0) }}
+                                    </span>
+                                @endif
                             </div>
 
                             @if($item->itemStocks->count() > 0)

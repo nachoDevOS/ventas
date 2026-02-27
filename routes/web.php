@@ -84,6 +84,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::get('items/{id}/sales/ajax/list', [ItemController::class, 'listSales']);
     Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');
     Route::delete('items/{id}/stock/{stock}', [ItemController::class, 'destroyStock'])->name('items-stock.destroy');
+    Route::patch('items/{id}/minimum', [ItemController::class, 'updateMinimum'])->name('items.update.minimum');
 
     
     Route::get('whatsapp', [MicroServiceController::class, 'message'])->name('whatsapp.message');
