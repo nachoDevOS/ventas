@@ -43,15 +43,15 @@
                                 $image = $item->image ? Voyager::image($item->image) : asset('images/default.jpg');
                             @endphp
                             <img src="{{ $image }}"
-                                 style="width: 90px; height: 90px; object-fit: cover;
+                                 style="width: 200px; height: 200px; object-fit: cover;
                                         border-radius: 6px; border: 2px solid #eee;"
                                  alt="{{ $item->nameTrade ?? $item->nameGeneric }}">
                             <div style="margin-top: 5px;">
-                                <div style="font-weight: 700; color: #2c3e50; font-size: 12px; line-height: 1.3;">
+                                <div style="font-weight: 700; color: #2c3e50; font-size: 16px; line-height: 1.3;">
                                     {{ strtoupper($item->nameGeneric) }}
                                 </div>
                                 @if($item->nameTrade)
-                                    <div style="font-size: 11px; color: #999; margin-top: 2px;">
+                                    <div style="font-size: 14px; color: #000000; margin-top: 2px;">
                                         {{ $item->nameTrade }}
                                     </div>
                                 @endif
@@ -90,21 +90,32 @@
 
                                 {{-- Fracción --}}
                                 @if ($item->fraction)
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <div class="item-info-card item-fraction-card">
                                         <span class="item-info-label">
-                                            <i class="fa-solid fa-puzzle-piece"></i> Fracción
-                                            <span class="label label-info" style="font-size: 8px; margin-left: 3px; vertical-align: middle;">Sí</span>
+                                            <i class="fa-solid fa-puzzle-piece"></i> Venta por Fracción
+                                            <span class="label label-info" style="font-size: 8px; margin-left: 3px; vertical-align: middle;">Habilitada</span>
                                         </span>
-                                        <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
-                                            <span style="font-size: 12px; font-weight: 700; color: #2e7d32;">
-                                                {{ $item->presentation ? strtoupper($item->presentation->name) : '—' }}
-                                            </span>
-                                            <span style="color: #aaa;">→</span>
-                                            <span style="font-size: 12px; font-weight: 700; color: #1565c0;">
-                                                {{ number_format($item->fractionQuantity, 0, ',', '.') }}
-                                                {{ strtoupper($item->fractionPresentation->name) }}
-                                            </span>
+                                        <div style="margin-top: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <div style="text-align: center; background: #fff; border: 1px solid #c8e6c9; border-radius: 5px; padding: 4px 12px; min-width: 80px;">
+                                                <div style="font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">1 Unidad</div>
+                                                <div style="font-size: 13px; font-weight: 700; color: #2e7d32;">
+                                                    {{ $item->presentation ? strtoupper($item->presentation->name) : '—' }}
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 16px; color: #aaa;">→</div>
+                                            <div style="text-align: center; background: #fff; border: 1px solid #90caf9; border-radius: 5px; padding: 4px 12px; min-width: 80px;">
+                                                <div style="font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Contiene</div>
+                                                <div style="font-size: 13px; font-weight: 700; color: #1565c0;">
+                                                    {{ number_format($item->fractionQuantity, 0, ',', '.') }}
+                                                    {{ strtoupper($item->fractionPresentation->name) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 4px; font-size: 10px; color: #777;">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Vender por unidad <b>({{ $item->presentation ? strtoupper($item->presentation->name) : '—' }})</b>
+                                            o por fracción <b>({{ strtoupper($item->fractionPresentation->name) }})</b>.
                                         </div>
                                     </div>
                                 </div>
@@ -112,7 +123,7 @@
                                 <div class="col-md-3">
                                     <div class="item-info-card">
                                         <span class="item-info-label">
-                                            <i class="fa-solid fa-puzzle-piece"></i> Fracción
+                                            <i class="fa-solid fa-puzzle-piece"></i> Venta por Fracción
                                         </span>
                                         <span class="item-info-value">
                                             <span class="label label-default" style="font-size: 10px;">Sin fracción</span>
