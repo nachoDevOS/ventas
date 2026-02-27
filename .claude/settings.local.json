@@ -3,7 +3,14 @@
     "allow": [
       "Bash(php artisan migrate)",
       "Bash(php -l app/Http/Controllers/SaleController.php)",
-      "Bash(php -l app/Http/Controllers/Controller.php)"
+      "Bash(php -l app/Http/Controllers/Controller.php)",
+      "Bash(php artisan route:list --name=sales)",
+      "Bash(php artisan route:list)",
+      "Bash(php artisan view:clear)",
+      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; $kernel = $app->make\\(''Illuminate\\\\Contracts\\\\Http\\\\Kernel''\\); $request = Illuminate\\\\Http\\\\Request::create\\(''/admin/sales/ajax/list'', ''GET''\\); $response = $kernel->handle\\($request\\); echo $response->getStatusCode\\(\\);\")",
+      "Bash(php artisan view:cache)",
+      "Bash(php artisan config:clear)",
+      "Bash(php artisan cache:clear)"
     ]
   }
 }

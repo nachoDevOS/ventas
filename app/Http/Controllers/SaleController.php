@@ -29,8 +29,10 @@ class SaleController extends Controller
     public function list()
     {
         $this->custom_authorize('browse_sales');
-        $search = request('search') ?? null;
+        $search   = request('search')   ?? null;
         $paginate = request('paginate') ?? 10;
+        $typeSale = in_array(request('typeSale'), ['Venta al Contado', 'Venta al Credito', 'Proforma'])
+                    ? request('typeSale') : null;
 
         $data = Sale::with([
             'person',
@@ -38,7 +40,8 @@ class SaleController extends Controller
             'saleDetails' => function ($q) {
                 $q->where('deleted_at', null);
             },
-            'saleDetails.itemStock.item',
+            'saleDetails.itemStock.item.presentation',
+            'saleDetails.itemStock.item.fractionPresentation',
             'saleTransactions' => function ($q) {
                 $q->where('deleted_at', null);
             },
@@ -48,9 +51,12 @@ class SaleController extends Controller
                     ->OrWhereRaw($search ? "id = '$search'" : 1)
                     ->OrWhereRaw($search ? "code like '%$search%'" : 1);
             })
+            ->when($typeSale, function ($query) use ($typeSale) {
+                $query->where('typeSale', $typeSale);
+            })
             ->where('deleted_at', null)
             ->orderBy('id', 'DESC')
-            ->paginate($paginate);            
+            ->paginate($paginate);
 
         return view('sales.list', compact('data'));
     }
