@@ -30,7 +30,7 @@
                 <div class="panel panel-bordered">
                     <div class="row">
                         @php
-                            $amountCashier = ($globalFuntion_cashierMoney['cashierIn'] + $globalFuntion_cashierMoney['paymentEfectivo']) - $globalFuntion_cashierMoney['paymentEfectivoEgreso'];
+                            $amountCashier = ($globalFuntion_cashierMoney['cashierIn'] + $globalFuntion_cashierMoney['paymentEfectivoIngreso']) - $globalFuntion_cashierMoney['paymentEfectivoEgreso'];
 
                         @endphp
                         <div class="col-md-6" style="height: 650px; overflow-y: auto">
@@ -83,7 +83,7 @@
                                     <p style="margin-top: 20px">Ingresos por cobros en efectivo</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <h3 class="text-right" style="padding-right: 20px">{{number_format($globalFuntion_cashierMoney['paymentEfectivo'], 2, ',', '.') }}</h3>
+                                    <h3 class="text-right" style="padding-right: 20px">{{number_format($globalFuntion_cashierMoney['paymentEfectivoIngreso'], 2, ',', '.') }}</h3>
                                 </div>
                             </div>
                             <div class="row">
@@ -91,7 +91,7 @@
                                     <p style="margin-top: 20px">Ingresos por cobros en Qr</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <h3 class="text-right" style="padding-right: 20px">{{ number_format($globalFuntion_cashierMoney['paymentQr'], 2, ',', '.') }}</h3>
+                                    <h3 class="text-right" style="padding-right: 20px">{{ number_format($globalFuntion_cashierMoney['paymentQrIngreso'], 2, ',', '.') }}</h3>
                                 </div>
                             </div>
                             <div class="row">

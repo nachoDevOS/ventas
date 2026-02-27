@@ -80,6 +80,7 @@
                         <div class="kpi-content">
                             <p class="kpi-label">Ventas del Día</p>
                             <h3 class="kpi-value">Bs. {{ number_format($global_index['amountDaytotal'], 2, ',', '.') }}</h3>
+                            <small class="text-muted">{{ $global_index['saleDaytotalCount'] }} {{ $global_index['saleDaytotalCount'] == 1 ? 'transacción' : 'transacciones' }}</small>
                         </div>
                     </div>
                 </a>
@@ -513,6 +514,56 @@
                                             <div class="panel-body">
                                                 <div class="chart-container">
                                                     <canvas id="ventasMensualesChart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Gráfico de método de pago del día -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-bordered">
+                                            <div class="panel-heading">
+                                                <div class="panel-title-container">
+                                                    <h3 class="panel-title">Método de Pago del Día</h3>
+                                                    <div class="chart-controls">
+                                                        <select class="form-control chart-type-selector" data-chart="tipoPagoChart">
+                                                            <option value="doughnut" selected>Dona</option>
+                                                            <option value="bar">Barras</option>
+                                                        </select>
+                                                        <button class="btn btn-sm btn-default chart-export" data-chart="tipoPagoChart" title="Descargar">
+                                                            <i class="voyager-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="chart-container">
+                                                    <canvas id="tipoPagoChart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <!-- Gráfico de tipo de venta del día -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-bordered">
+                                            <div class="panel-heading">
+                                                <div class="panel-title-container">
+                                                    <h3 class="panel-title">Tipo de Venta del Día</h3>
+                                                    <div class="chart-controls">
+                                                        <select class="form-control chart-type-selector" data-chart="tipoVentaChart">
+                                                            <option value="doughnut" selected>Dona</option>
+                                                            <option value="bar">Barras</option>
+                                                        </select>
+                                                        <button class="btn btn-sm btn-default chart-export" data-chart="tipoVentaChart" title="Descargar">
+                                                            <i class="voyager-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="chart-container">
+                                                    <canvas id="tipoVentaChart" height="250"></canvas>
                                                 </div>
                                             </div>
                                         </div>
@@ -989,7 +1040,7 @@
     <script>
         $(document).ready(function() {
             // 1. Declarar las variables de los gráficos aquí para que sean accesibles en todo el script
-            let ventasMensualesChart, topProductosChart, ventasDiasChart;
+            let ventasMensualesChart, topProductosChart, ventasDiasChart, tipoPagoChart, tipoVentaChart;
 
 
             // --- Preparación de datos iniciales para los gráficos ---
@@ -1028,6 +1079,40 @@
                         '#4BC0C0',
                         '#9966FF'
                     ],
+                    borderWidth: 1
+                }]
+            };
+
+            // Datos para el gráfico de método de pago del día
+            const paymentBreakdown = @json($global_index['paymentBreakdown']);
+            const tipoPagoData = {
+                labels: paymentBreakdown.length
+                    ? paymentBreakdown.map(item => item.type === 'Efectivo' ? 'Efectivo' : 'QR')
+                    : ['Sin ventas'],
+                datasets: [{
+                    label: 'Bs.',
+                    data: paymentBreakdown.length
+                        ? paymentBreakdown.map(item => item.amount)
+                        : [0],
+                    backgroundColor: ['#27ae60', '#3498db', '#f39c12'],
+                    borderColor:     ['#27ae60', '#3498db', '#f39c12'],
+                    borderWidth: 1
+                }]
+            };
+
+            // Datos para el gráfico de tipo de venta del día
+            const typeSaleBreakdown = @json($global_index['typeSaleBreakdown']);
+            const tipoVentaData = {
+                labels: typeSaleBreakdown.map(item => {
+                    if (item.type === 'Venta al Contado') return 'Contado';
+                    if (item.type === 'Venta al Credito') return 'Crédito';
+                    return 'Proforma';
+                }),
+                datasets: [{
+                    label: 'Bs.',
+                    data: typeSaleBreakdown.map(item => item.amount),
+                    backgroundColor: ['#4a90e2', '#e74c3c', '#95a5a6'],
+                    borderColor:     ['#4a90e2', '#e74c3c', '#95a5a6'],
                     borderWidth: 1
                 }]
             };
@@ -1191,6 +1276,47 @@
                 options: chartOptions
             });
 
+            tipoPagoChart = new Chart(document.getElementById('tipoPagoChart'), {
+                type: 'doughnut',
+                data: tipoPagoData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const val = ctx.parsed || 0;
+                                    return ' Bs. ' + val.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            tipoVentaChart = new Chart(document.getElementById('tipoVentaChart'), {
+                type: 'doughnut',
+                data: tipoVentaData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const item = typeSaleBreakdown[ctx.dataIndex];
+                                    const val  = ctx.parsed || 0;
+                                    return ` Bs. ${val.toLocaleString('es-ES', { minimumFractionDigits: 2 })} (${item ? item.count : 0} ${item && item.count === 1 ? 'venta' : 'ventas'})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
             // Cambiar tipo de gráfico
             $('.chart-type-selector').change(function() {
                 const chartId = $(this).data('chart');
@@ -1203,6 +1329,10 @@
                     chart = ventasDiasChart;
                 } else if (chartId === 'topProductosChart') {
                     chart = topProductosChart;
+                } else if (chartId === 'tipoPagoChart') {
+                    chart = tipoPagoChart;
+                } else if (chartId === 'tipoVentaChart') {
+                    chart = tipoVentaChart;
                 }
 
                 if (chart) {

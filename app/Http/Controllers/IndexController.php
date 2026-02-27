@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Person;
+use App\Models\SaleTransaction;
 
 class IndexController extends Controller
 {
@@ -137,11 +138,38 @@ class IndexController extends Controller
             ->get();
 
         // ── Total del día ─────────────────────────────────────────────────────
-        $today          = date('Y-m-d');
-        $amountDaytotal = $sales
+        $today         = date('Y-m-d');
+        $todaySalesCol = $sales
             ->where('deleted_at', null)
-            ->filter(fn($s) => $s->created_at->format('Y-m-d') === $today)
-            ->sum('amount');
+            ->filter(fn($s) => $s->created_at->format('Y-m-d') === $today);
+
+        $amountDaytotal    = (float) $todaySalesCol->sum('amount');
+        $saleDaytotalCount = $todaySalesCol->count();
+
+        // ── Tipo de venta del día (Contado / Crédito / Proforma) ──────────────
+        $types = ['Venta al Contado', 'Venta al Credito', 'Proforma'];
+        $typeSaleBreakdown = array_map(function ($type) use ($todaySalesCol) {
+            $group = $todaySalesCol->where('typeSale', $type);
+            return [
+                'type'   => $type,
+                'amount' => (float) $group->sum('amount'),
+                'count'  => $group->count(),
+            ];
+        }, $types);
+
+        // ── Método de pago del día (Efectivo / QR) ────────────────────────────
+        $paymentBreakdown = SaleTransaction::whereNull('deleted_at')
+            ->whereHas('sale', fn($q) => $q->whereDate('created_at', $today)->whereNull('deleted_at'))
+            ->selectRaw('paymentType, SUM(amount) as total, COUNT(*) as qty')
+            ->groupBy('paymentType')
+            ->get()
+            ->map(fn($r) => [
+                'type'   => $r->paymentType,
+                'amount' => (float) $r->total,
+                'count'  => (int) $r->qty,
+            ])
+            ->values()
+            ->all();
 
         // ── Recordatorios del día (sin modelo disponible) ─────────────────────
         $reminder = 0;
@@ -195,11 +223,14 @@ class IndexController extends Controller
             'year'              => $year,
             'monthInteractive'  => $monthInteractive,
             'amountDaytotal'    => $amountDaytotal,
+            'saleDaytotalCount' => $saleDaytotalCount,
             'reminder'          => $reminder,
             'customer'          => $people,
             'pet'               => 0,
             'productTop5Day'    => $productTop5Day,
             'weekDays'          => $weekDays,
+            'typeSaleBreakdown' => $typeSaleBreakdown,
+            'paymentBreakdown'  => $paymentBreakdown,
             'todayBirthdaysCount'  => $todayBirthdaysCount,
             'upcomingBirthdays'    => $upcomingBirthdays->values()->all(),
         ]);
