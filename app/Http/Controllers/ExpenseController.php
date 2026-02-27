@@ -25,6 +25,8 @@ class ExpenseController extends Controller
         $amount_cash = $request->amount_cash??0;
         $amount_qr = $request->amount_qr??0;
 
+        return $request;
+
         $amountTotal = $amount_cash + $amount_qr;
         if($amountTotal <= 0)
         {
@@ -37,12 +39,12 @@ class ExpenseController extends Controller
                 ->with(['message' => 'Usted no cuenta con caja abierta.', 'alert-type' => 'warning']);
         }
 
-        if($cashier['amountCashier'] < $amount_cash)
+        if($cashier['amountEfectivoCashier'] < $amount_cash)
         {
             return redirect()->back()->with(['message' => 'No cuenta con monto en efectivo disponible para realizar la transaccion.', 'alert-type' => 'warning']);
         }
 
-        if($cashier['amountQr'] < $amount_qr)
+        if($cashier['amountQrCashier'] < $amount_qr)
         {
             return redirect()->back()->with(['message' => 'No cuenta con monto en Qr disponible para realizar la transaccion.', 'alert-type' => 'warning']);
         }
