@@ -43,7 +43,7 @@ class ItemController extends Controller
             ->groupBy('laboratory_id')
             ->get();
 
-        return view('parameterInventories.items.browse', compact('laboratories', 'categories'));
+        return view('items.browse', compact('laboratories', 'categories'));
     }
 
     public function list(){
@@ -91,7 +91,7 @@ class ItemController extends Controller
                         })
                         ->orderBy('id', 'DESC')
                         ->paginate($paginate);
-        return view('parameterInventories.items.list', compact('data'));
+        return view('items.list', compact('data'));
     }
 
     public function store(Request $request)
@@ -210,7 +210,7 @@ class ItemController extends Controller
             ->where('deleted_at', null)
             ->first();
 
-        return view('parameterInventories.items.read', compact('item'));
+        return view('items.read', compact('item'));
     }
 
 
@@ -236,7 +236,7 @@ class ItemController extends Controller
             ->orderBy('id', 'DESC')
             ->paginate($paginate);
 
-        return view('parameterInventories.items.itemStocks.list', compact('data'));
+        return view('items.itemStocks.list', compact('data'));
     }
     public function storeStock(Request $request, $id)
     {
@@ -334,7 +334,7 @@ class ItemController extends Controller
             ->orderBy('id', 'DESC')
             ->paginate($paginate);
 
-        return view('parameterInventories.items.sales.list', compact('data'));
+        return view('items.sales.list', compact('data'));
     }
 
     public function expiry()
@@ -362,7 +362,7 @@ class ItemController extends Controller
             'ok'       => $stocks->filter(fn($s) => $s->daysLeft > 90)->count(),
         ];
 
-        return view('parameterInventories.items.expiry', compact('stocks', 'counts'));
+        return view('items.expiry', compact('stocks', 'counts'));
     }
 
     public function destroyStock($id, $stock)
