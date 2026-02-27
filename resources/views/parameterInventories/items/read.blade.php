@@ -132,7 +132,7 @@
                                 </div>
                                 @endif
 
-                                <div class="col-md-12" style="margin-top: 2px;">
+                                <div class="col-md-6" style="margin-top: 2px;">
                                     <div class="item-info-card" style="background: #fffde7; border-color: #ffe082;">
                                         <span class="item-info-label">
                                             <i class="fa-solid fa-note-sticky"></i> Descripción / Observación
