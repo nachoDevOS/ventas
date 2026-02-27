@@ -11,6 +11,7 @@ use App\Models\IncomeDetail;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\ItemStockFraction;
+use Carbon\Carbon;
 
 class ItemController extends Controller
 {
@@ -334,6 +335,34 @@ class ItemController extends Controller
             ->paginate($paginate);
 
         return view('parameterInventories.items.sales.list', compact('data'));
+    }
+
+    public function expiry()
+    {
+        $this->custom_authorize('browse_items');
+
+        $today = Carbon::today();
+
+        $stocks = ItemStock::with(['item'])
+            ->whereNotNull('expirationDate')
+            ->where('deleted_at', null)
+            ->where('stock', '>', 0)
+            ->orderBy('expirationDate', 'asc')
+            ->get()
+            ->map(function ($s) use ($today) {
+                $exp = Carbon::parse($s->expirationDate);
+                $s->daysLeft = $today->diffInDays($exp, false); // negative = expired
+                return $s;
+            });
+
+        $counts = [
+            'expired'  => $stocks->filter(fn($s) => $s->daysLeft < 0)->count(),
+            'critical' => $stocks->filter(fn($s) => $s->daysLeft >= 0 && $s->daysLeft <= 30)->count(),
+            'warning'  => $stocks->filter(fn($s) => $s->daysLeft > 30 && $s->daysLeft <= 90)->count(),
+            'ok'       => $stocks->filter(fn($s) => $s->daysLeft > 90)->count(),
+        ];
+
+        return view('parameterInventories.items.expiry', compact('stocks', 'counts'));
     }
 
     public function destroyStock($id, $stock)

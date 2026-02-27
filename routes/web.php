@@ -70,6 +70,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
 
     // Item
     Route::get('items', [ItemController::class, 'index'])->name('voyager.items.index');
+    Route::get('items/expiry', [ItemController::class, 'expiry'])->name('items.expiry');
     Route::get('items/ajax/list', [ItemController::class, 'list']);
     Route::post('items', [ItemController::class, 'store'])->name('voyager.items.store');
     Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
