@@ -33,26 +33,26 @@
     ══════════════════════════════════════════════════ --}}
     <div class="row">
         <div class="col-md-12">
-            <div class="panel panel-bordered" style="padding-bottom: 5px;">
-                <div class="panel-body">
+            <div class="panel panel-bordered" style="margin-bottom: 10px;">
+                <div class="panel-body" style="padding: 10px 15px;">
                     <div class="row">
 
                         {{-- Imagen + Nombre --}}
-                        <div class="col-md-2" style="text-align: center;">
+                        <div class="col-md-2" style="text-align: center; padding-top: 4px;">
                             @php
                                 $image = $item->image ? Voyager::image($item->image) : asset('images/default.jpg');
                             @endphp
                             <img src="{{ $image }}"
-                                 style="width: 100%; max-width: 160px; height: 160px; object-fit: cover;
-                                        border-radius: 8px; border: 2px solid #eee;"
+                                 style="width: 90px; height: 90px; object-fit: cover;
+                                        border-radius: 6px; border: 2px solid #eee;"
                                  alt="{{ $item->nameTrade ?? $item->nameGeneric }}">
-                            <div style="margin-top: 8px;">
-                                <div style="font-weight: 700; color: #2c3e50; font-size: 14px; line-height: 1.3;">
+                            <div style="margin-top: 5px;">
+                                <div style="font-weight: 700; color: #2c3e50; font-size: 12px; line-height: 1.3;">
                                     {{ strtoupper($item->nameGeneric) }}
                                 </div>
                                 @if($item->nameTrade)
-                                    <div style="font-size: 12px; color: #777; margin-top: 3px;">
-                                        <i class="fa-solid fa-tag"></i> {{ $item->nameTrade }}
+                                    <div style="font-size: 11px; color: #999; margin-top: 2px;">
+                                        {{ $item->nameTrade }}
                                     </div>
                                 @endif
                             </div>
@@ -80,41 +80,31 @@
                                         <span class="item-info-label">Estado</span>
                                         <span class="item-info-value">
                                             @if($item->status)
-                                                <span class="label label-success">Activo</span>
+                                                <span class="label label-success" style="font-size: 10px;">Activo</span>
                                             @else
-                                                <span class="label label-danger">Inactivo</span>
+                                                <span class="label label-danger" style="font-size: 10px;">Inactivo</span>
                                             @endif
                                         </span>
                                     </div>
                                 </div>
 
+                                {{-- Fracción --}}
                                 @if ($item->fraction)
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="item-info-card item-fraction-card">
                                         <span class="item-info-label">
-                                            <i class="fa-solid fa-puzzle-piece"></i> Venta por Fracción
-                                            <span class="label label-info" style="font-size: 9px; margin-left: 4px; vertical-align: middle;">Habilitada</span>
+                                            <i class="fa-solid fa-puzzle-piece"></i> Fracción
+                                            <span class="label label-info" style="font-size: 8px; margin-left: 3px; vertical-align: middle;">Sí</span>
                                         </span>
-                                        <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                            <div style="text-align: center; background: #fff; border: 1px solid #c8e6c9; border-radius: 6px; padding: 6px 14px; min-width: 90px;">
-                                                <div style="font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">1 Unidad</div>
-                                                <div style="font-size: 15px; font-weight: 700; color: #2e7d32;">
-                                                    {{ $item->presentation ? strtoupper($item->presentation->name) : '—' }}
-                                                </div>
-                                            </div>
-                                            <div style="font-size: 20px; color: #aaa; font-weight: 300;">→</div>
-                                            <div style="text-align: center; background: #fff; border: 1px solid #90caf9; border-radius: 6px; padding: 6px 14px; min-width: 90px;">
-                                                <div style="font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Contiene</div>
-                                                <div style="font-size: 15px; font-weight: 700; color: #1565c0;">
-                                                    {{ number_format($item->fractionQuantity, 0, ',', '.') }}
-                                                    {{ strtoupper($item->fractionPresentation->name) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div style="margin-top: 6px; font-size: 11px; color: #777;">
-                                            <i class="fa-solid fa-circle-info"></i>
-                                            Se puede vender por unidad <b>({{ $item->presentation ? strtoupper($item->presentation->name) : '—' }})</b>
-                                            o por fracción <b>({{ strtoupper($item->fractionPresentation->name) }})</b>.
+                                        <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-size: 12px; font-weight: 700; color: #2e7d32;">
+                                                {{ $item->presentation ? strtoupper($item->presentation->name) : '—' }}
+                                            </span>
+                                            <span style="color: #aaa;">→</span>
+                                            <span style="font-size: 12px; font-weight: 700; color: #1565c0;">
+                                                {{ number_format($item->fractionQuantity, 0, ',', '.') }}
+                                                {{ strtoupper($item->fractionPresentation->name) }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -122,7 +112,7 @@
                                 <div class="col-md-3">
                                     <div class="item-info-card">
                                         <span class="item-info-label">
-                                            <i class="fa-solid fa-puzzle-piece"></i> Venta por Fracción
+                                            <i class="fa-solid fa-puzzle-piece"></i> Fracción
                                         </span>
                                         <span class="item-info-value">
                                             <span class="label label-default" style="font-size: 10px;">Sin fracción</span>
@@ -131,12 +121,12 @@
                                 </div>
                                 @endif
 
-                                <div class="col-md-12" style="margin-top: 4px;">
+                                <div class="col-md-12" style="margin-top: 2px;">
                                     <div class="item-info-card" style="background: #fffde7; border-color: #ffe082;">
                                         <span class="item-info-label">
                                             <i class="fa-solid fa-note-sticky"></i> Descripción / Observación
                                         </span>
-                                        <span class="item-info-value" style="color: #7a6000; font-weight: 400; font-size: 13px; white-space: pre-line;">
+                                        <span class="item-info-value" style="color: #7a6000; font-weight: 400; white-space: pre-line;">
                                             {{ $item->observation ?: '—' }}
                                         </span>
                                     </div>
@@ -392,9 +382,9 @@
     .item-info-card {
         background: #f8f9fa;
         border: 1px solid #eee;
-        border-radius: 6px;
-        padding: 8px 12px;
-        margin-bottom: 10px;
+        border-radius: 5px;
+        padding: 5px 10px;
+        margin-bottom: 6px;
     }
     .item-info-label {
         display: block;
@@ -407,7 +397,7 @@
     }
     .item-info-value {
         display: block;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         color: #333;
     }
