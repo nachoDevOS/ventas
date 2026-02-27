@@ -39,37 +39,7 @@
                                 })                
                                 ->sum();
 
-                            $paymentEfectivoVaccination = $cashier->vaccinationRecords->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->vaccinationTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-
-                            $paymentEfectivoDewormings = $cashier->dewormings->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->dewormingTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-
-                            $paymentEfectivoAnamnesis = $cashier->anamnesisForms->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->anamnesisTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-                       
-                            $paymentEfectivoHairsalon = $cashier->hairSalons->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->hairSalonTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-                          
-                            $paymentEfectivoHomeService = $cashier->homeServices->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->homeServiceTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-
-                            $paymentEfectivo = $paymentEfectivoSale + $paymentEfectivoVaccination + $paymentEfectivoDewormings + $paymentEfectivoAnamnesis + $paymentEfectivoHairsalon + $paymentEfectivoHomeService;
+                            $paymentEfectivo = $paymentEfectivoSale;
 
 
                             // #####################################
@@ -79,42 +49,7 @@
                                 })
                                 ->sum();
 
-                            // Vacunacion Ingreso
-                            $paymentQrVaccination = $cashier->vaccinationRecords->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->vaccinationTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })
-                                ->sum();
-
-                            // Desparasitacion Ingreso
-                            $paymentQrDewormings = $cashier->dewormings->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->dewormingTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })
-                                ->sum();
-                            
-                            // Anamnesis Ingreso
-                            $paymentQrAnamnesis = $cashier->anamnesisForms->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->anamnesisTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })
-                                ->sum();
-
-                            // Baño y Peluqueria Ingreso
-                            $paymentQrHairsalon = $cashier->hairSalons->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->hairSalonTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })
-                                ->sum();
-
-                            // Servicios a Domicilio Ingreso
-                            $paymentQrHomeService = $cashier->homeServices->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->homeServiceTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })
-                                ->sum();
-
-                            $paymentQr = $paymentQrSale + $paymentQrVaccination + $paymentQrDewormings + $paymentQrAnamnesis + $paymentQrHairsalon + $paymentQrHomeService;
+                            $paymentQr = $paymentQrSale;
                             
 
 
@@ -126,20 +61,7 @@
                                 })                
                                 ->sum();
 
-                            // Adelanto de Pagos Egreso
-                            $paymentEfectivoAdvancePayment = $cashier->advancePayments->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->advancePaymentTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-
-                            // Pago de Planillas Egreso
-                            $paymentEfectivoPaymentSheet = $cashier->paymentSheets->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->paymentSheetTransactions->where('paymentType', 'Efectivo')->pluck('amount');
-                                })                
-                                ->sum();
-                            $paymentEfectivoEgreso = $paymentEfectivoExpenses + $paymentEfectivoAdvancePayment + $paymentEfectivoPaymentSheet;
+                            $paymentEfectivoEgreso = $paymentEfectivoExpenses;
 
                             // Qr.....................................................................
 
@@ -149,20 +71,7 @@
                                 })                
                                 ->sum();
 
-                            // Adelanto de Pagos Egreso
-                            $paymentQrAdvancePayment = $cashier->advancePayments->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->advancePaymentTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })                
-                                ->sum();
-                            
-                            // Pago de Planillas Egreso
-                            $paymentQrPaymentSheet = $cashier->paymentSheets->where('deleted_at', null)
-                                ->flatMap(function($q) {
-                                    return $q->paymentSheetTransactions->where('paymentType', 'Qr')->pluck('amount');
-                                })                
-                                ->sum();
-                            $paymentQrEgreso = $paymentQrAdvancePayment+$paymentQrExpenses+$paymentQrPaymentSheet;
+                            $paymentQrEgreso = $paymentQrExpenses;
 
                             
                             
