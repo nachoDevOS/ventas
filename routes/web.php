@@ -38,6 +38,7 @@ Route::get('/info/{id?}', [ErrorController::class , 'error'])->name('errors');
 // Route::get('/development', [ErrorController::class , 'error503'])->name('development');
 
 Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], function () {
+    // Rutas custom que deben tener prioridad sobre el BREAD de Voyager
     Voyager::routes();
 
     Route::resource('cashiers', CashierController::class);
@@ -70,11 +71,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
 
     // Item
     Route::get('items', [ItemController::class, 'index'])->name('voyager.items.index');
-    Route::get('items/expiry', [ItemController::class, 'expiry'])->name('items.expiry');
     Route::get('items/ajax/list', [ItemController::class, 'list']);
     Route::post('items', [ItemController::class, 'store'])->name('voyager.items.store');
     Route::put('items/{id}', [ItemController::class, 'update'])->name('voyager.items.update');
     Route::get('items/{id}', [ItemController::class, 'show'])->name('voyager.items.show');
+
+    Route::get('items/expiry', [ItemController::class, 'expiry'])->name('items.expiry');
 
     Route::get('item/stock/ajax', [AjaxController::class, 'itemStockList']);//Para obtener los item que hay disponible en el inventario
 
