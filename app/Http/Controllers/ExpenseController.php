@@ -25,8 +25,6 @@ class ExpenseController extends Controller
         $amount_cash = $request->amount_cash??0;
         $amount_qr = $request->amount_qr??0;
 
-        return $request;
-
         $amountTotal = $amount_cash + $amount_qr;
         if($amountTotal <= 0)
         {

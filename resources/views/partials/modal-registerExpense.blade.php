@@ -15,6 +15,8 @@
                     @csrf
                     <input type="hidden" name="amount"      id="input-total-amount">
                     <input type="hidden" name="observation" id="input-observation">
+                    <input type="hidden" name="amount_cash" id="hidden-amount-cash" value="0">
+                    <input type="hidden" name="amount_qr"   id="hidden-amount-qr"   value="0">
 
                     {{-- ── Tabla de ítems ───────────────────────────────────────── --}}
                     <table class="table table-bordered table-hover" id="table-expenses">
@@ -87,10 +89,9 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon" style="background: #27ae60; color: #fff; border-color: #27ae60;">Bs.</span>
-                                    <input type="number" name="amount_cash" id="input-cash-solo"
+                                    <input type="number" id="input-cash-solo"
                                         class="form-control" readonly
                                         style="font-size: 1.2rem; font-weight: bold; background: #fff; color: #27ae60;">
-                                    <input type="hidden" name="amount_qr" value="0">
                                 </div>
                                 <small class="text-muted" style="margin-top: 6px; display: block;">
                                     <i class="fa fa-info-circle"></i> El monto completo del gasto se descuenta del efectivo en caja.
@@ -107,10 +108,9 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon" style="background: #1565c0; color: #fff; border-color: #1565c0;">Bs.</span>
-                                    <input type="number" name="amount_qr" id="input-qr-solo"
+                                    <input type="number" id="input-qr-solo"
                                         class="form-control" readonly
                                         style="font-size: 1.2rem; font-weight: bold; background: #fff; color: #1565c0;">
-                                    <input type="hidden" name="amount_cash" value="0">
                                 </div>
                                 <small class="text-muted" style="margin-top: 6px; display: block;">
                                     <i class="fa fa-info-circle"></i> El monto completo del gasto se descuenta del saldo QR.
@@ -133,7 +133,7 @@
                                         </label>
                                         <div class="input-group">
                                             <span class="input-group-addon" style="background: #27ae60; color: #fff; border-color: #27ae60;">Bs.</span>
-                                            <input type="number" name="amount_cash" id="input-cash-mixed"
+                                            <input type="number" id="input-cash-mixed"
                                                 class="form-control" step="0.5" min="0" placeholder="0.00"
                                                 oninput="syncMixedExpense()"
                                                 style="font-weight: bold; color: #27ae60;">
@@ -145,7 +145,7 @@
                                         </label>
                                         <div class="input-group">
                                             <span class="input-group-addon" style="background: #1565c0; color: #fff; border-color: #1565c0;">Bs.</span>
-                                            <input type="number" name="amount_qr" id="input-qr-mixed"
+                                            <input type="number" id="input-qr-mixed"
                                                 class="form-control" readonly
                                                 style="font-weight: bold; color: #1565c0; background: #f0f4ff;">
                                         </div>
@@ -315,6 +315,20 @@
                     e.preventDefault();
                     toastr.error('El total del gasto debe ser mayor a 0.');
                     return false;
+                }
+
+                // Poblar hidden amounts antes de enviar
+                if (type === 'Efectivo') {
+                    $('#hidden-amount-cash').val(total.toFixed(2));
+                    $('#hidden-amount-qr').val('0');
+                } else if (type === 'Qr') {
+                    $('#hidden-amount-cash').val('0');
+                    $('#hidden-amount-qr').val(total.toFixed(2));
+                } else if (type === 'Efectivo y Qr') {
+                    let cashF = parseFloat($('#input-cash-mixed').val()) || 0;
+                    let qrF   = parseFloat($('#input-qr-mixed').val())   || 0;
+                    $('#hidden-amount-cash').val(cashF.toFixed(2));
+                    $('#hidden-amount-qr').val(qrF.toFixed(2));
                 }
 
                 // Construir observation
