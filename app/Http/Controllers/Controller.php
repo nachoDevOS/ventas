@@ -239,7 +239,13 @@ class Controller extends BaseController
     public function destroyDispensation($dispensions)
     {
         foreach ($dispensions as $detail) {
-            $detail->delete(); 
+            // Eliminar la fracción ANTES de eliminar el detalle (mientras el modelo aún está vivo)
+            if ($detail->itemStockFraction_id != null) {
+                $detail->itemStockFraction->delete();
+            }
+
+            $detail->delete();
+
             $itemStock = ItemStock::findOrFail($detail->itemStock_id);
 
             $itemStockUnit = SaleDetail::with(['sale'])
@@ -267,13 +273,6 @@ class Controller extends BaseController
                 'stock' => $itemStock->quantity
             ]);
             $itemStock->decrement('stock', $itemStockUnit + $itemStockEgress);
-
-
-            if ($detail->itemStockFraction_id != null) { //si es diferenete de null entonce es una dispensacion en fraccion
-                $detail->itemStockFraction->delete();  
-            } 
-
-              
         }
     }
 }
