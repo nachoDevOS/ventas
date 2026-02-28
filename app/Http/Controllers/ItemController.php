@@ -14,6 +14,7 @@ use App\Models\ItemStockFraction;
 use App\Models\EgresDetail;
 use App\Models\Egres;
 use Carbon\Carbon;
+use PhpParser\Node\Stmt\Return_;
 
 class ItemController extends Controller
 {
@@ -409,12 +410,11 @@ class ItemController extends Controller
                 'reason'          => $reason,
                 'dateEgress'      => now()->toDateString(),
                 'status'          => 'Activo',
-                'registerUser_id' => auth()->id(),
             ]);
 
             if ($item->fraction && $item->fractionQuantity > 0) {
-                $wholeUnits     = max(0, intval($request->quantity ?? 0));
-                $extraFractions = max(0, intval($request->extraFractions ?? 0));
+                $wholeUnits     = max(0, intval($request->quantity ?? 0));       // solo entero positivo
+                $extraFractions = max(0, floatval($request->extraFractions ?? 0)); // permite decimal
 
                 if ($wholeUnits == 0 && $extraFractions == 0) {
                     DB::rollback();
@@ -446,7 +446,6 @@ class ItemController extends Controller
                         'quantity'         => $wholeUnits,
                         'amount'           => 0,
                         'status'           => 1,
-                        'registerUser_id'  => auth()->id(),
                     ]);
                 }
 
@@ -478,12 +477,11 @@ class ItemController extends Controller
                         'quantity'            => $extraFractions,
                         'amount'              => 0,
                         'status'              => 1,
-                        'registerUser_id'     => auth()->id(),
                     ]);
                 }
 
             } else {
-                $quantity = max(0, intval($request->quantity ?? 0));
+                $quantity = max(0, floatval($request->quantity ?? 0));
 
                 if ($quantity <= 0) {
                     DB::rollback();
@@ -508,7 +506,6 @@ class ItemController extends Controller
                     'quantity'        => $quantity,
                     'amount'          => 0,
                     'status'          => 1,
-                    'registerUser_id' => auth()->id(),
                 ]);
             }
 

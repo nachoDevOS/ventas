@@ -55,8 +55,9 @@
                             $marginFrac    = (($totalFracSale - $value->pricePurchase) / $value->pricePurchase) * 100;
                         }
 
-                        $egresos      = $value->egresDetails;
-                        $egresosCount = $egresos->count();
+                        $egresos          = $value->egresDetails;
+                        $egresosCount     = $egresos->count();                          // total detalles (para check de borrado)
+                        $egresosOpCount   = $egresos->groupBy('egres_id')->count();     // total operaciones (para mostrar al usuario)
                     @endphp
                     <tr>
                         {{-- N° --}}
@@ -84,7 +85,7 @@
                                         data-target="egresos-row-{{ $value->id }}"
                                         style="margin-top: 4px; font-size: 10px; color: #c0392b; border-color: #e0b0b0;">
                                     <i class="fa-solid fa-arrow-up-from-bracket"></i>
-                                    {{ $egresosCount }} egreso(s)
+                                    {{ $egresosOpCount }} egreso(s)
                                 </button>
                             @endif
                         </td>
@@ -264,25 +265,45 @@
                                     <table class="table table-condensed" style="margin: 0; font-size: 11px; background: transparent;">
                                         <thead>
                                             <tr style="background: #fdecea;">
+                                                <th style="width: 4%;  padding: 4px 8px; text-align: center;">#</th>
                                                 <th style="width: 13%; padding: 4px 8px;">Fecha</th>
                                                 <th style="width: 13%; padding: 4px 8px; text-align: right;">Unidades</th>
                                                 <th style="width: 13%; padding: 4px 8px; text-align: right;">Fracciones</th>
                                                 <th style="padding: 4px 8px;">Razón / Motivo</th>
                                                 <th style="width: 13%; padding: 4px 8px;">Registrado por</th>
-                                                <th style="width: 5%; padding: 4px 8px;"></th>
+                                                <th style="width: 5%;  padding: 4px 8px;"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            @php $eNum = 1; @endphp
                                             @foreach ($egresosGrouped as $egressId => $detalles)
                                                 @php
                                                     $first      = $detalles->first();
                                                     $detEntero  = $detalles->whereNull('itemStockFraction_id')->first();
                                                     $detFrac    = $detalles->whereNotNull('itemStockFraction_id')->first();
+                                                    $egresCab   = $first->egres;
                                                 @endphp
                                                 <tr>
-                                                    <td style="padding: 3px 8px; color: #888;">
-                                                        {{ \Carbon\Carbon::parse($first->created_at)->format('d/m/Y H:i') }}
+                                                    {{-- N° operación --}}
+                                                    <td style="padding: 3px 8px; text-align: center; color: #999; font-size: 10px;">
+                                                        {{ $eNum++ }}
                                                     </td>
+
+                                                    {{-- Fecha del egreso (header) + hora de creación --}}
+                                                    <td style="padding: 3px 8px; color: #555;">
+                                                        @if ($egresCab)
+                                                            <span style="font-weight: 600;">
+                                                                {{ \Carbon\Carbon::parse($egresCab->dateEgress)->format('d/m/Y') }}
+                                                            </span><br>
+                                                            <small style="color: #aaa;">
+                                                                {{ \Carbon\Carbon::parse($first->created_at)->format('H:i') }}
+                                                            </small>
+                                                        @else
+                                                            {{ \Carbon\Carbon::parse($first->created_at)->format('d/m/Y H:i') }}
+                                                        @endif
+                                                    </td>
+
+                                                    {{-- Unidades enteras --}}
                                                     <td style="padding: 3px 8px; text-align: right; font-weight: 700; color: #c0392b;">
                                                         @if ($detEntero)
                                                             {{ number_format($detEntero->quantity, 0) }}
@@ -291,6 +312,8 @@
                                                             <span style="color: #ccc; font-style: italic;">—</span>
                                                         @endif
                                                     </td>
+
+                                                    {{-- Fracciones --}}
                                                     <td style="padding: 3px 8px; text-align: right; color: #1565c0;">
                                                         @if ($detFrac)
                                                             {{ number_format($detFrac->quantity, 0) }}
@@ -299,12 +322,26 @@
                                                             <span style="color: #ccc; font-style: italic;">—</span>
                                                         @endif
                                                     </td>
+
+                                                    {{-- Razón + observación --}}
                                                     <td style="padding: 3px 8px;">
-                                                        {{ $first->egres->reason ?? '—' }}
+                                                        <span style="font-weight: 600;">
+                                                            {{ $egresCab->reason ?? '—' }}
+                                                        </span>
+                                                        @if (!empty($egresCab->observation))
+                                                            <br>
+                                                            <small style="color: #888; font-style: italic;">
+                                                                {{ $egresCab->observation }}
+                                                            </small>
+                                                        @endif
                                                     </td>
+
+                                                    {{-- Registrado por --}}
                                                     <td style="padding: 3px 8px; color: #888;">
                                                         {{ $first->registerUser->name ?? '—' }}
                                                     </td>
+
+                                                    {{-- Acción --}}
                                                     <td style="padding: 3px 8px; text-align: center;">
                                                         @if (auth()->user()->hasPermission('edit_items'))
                                                             <form method="POST"

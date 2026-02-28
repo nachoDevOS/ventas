@@ -556,7 +556,7 @@
                                 <div class="form-group col-md-3">
                                     <label>{{ strtoupper($item->fractionPresentation->name ?? 'Fracciones') }} adicionales</label>
                                     <input style="text-align:right" type="number" id="egress-extra-fractions"
-                                           name="extraFractions" step="1" min="0" value="0"
+                                           name="extraFractions" step="0.01" min="0" value="0"
                                            class="form-control" placeholder="0"
                                            oninput="updateEgressSummary()">
                                 </div>
@@ -564,7 +564,7 @@
                                 <div class="form-group col-md-4">
                                     <label>Cantidad</label>
                                     <input style="text-align:right" type="number" id="egress-quantity"
-                                           name="quantity" step="1" min="1" value=""
+                                           name="quantity" step="0.01" min="0" value=""
                                            class="form-control" placeholder="0"
                                            oninput="updateEgressSummary()">
                                 </div>
@@ -822,10 +822,10 @@
         $(document).on('click', '.btn-egress-lot', function () {
             const btn = $(this);
             egressLotData = {
-                fullUnits  : parseInt(btn.data('full-units'))  || 0,
-                extraFracs : parseInt(btn.data('extra-fracs')) || 0,
-                totalFracs : parseInt(btn.data('total-fracs')) || 0,
-                stock      : parseInt(btn.data('stock'))       || 0,
+                fullUnits  : parseFloat(btn.data('full-units'))  || 0,
+                extraFracs : parseFloat(btn.data('extra-fracs')) || 0,
+                totalFracs : parseFloat(btn.data('total-fracs')) || 0,
+                stock      : parseFloat(btn.data('stock'))       || 0,
             };
 
             // Rellenar info del lote en el modal
@@ -860,11 +860,13 @@
             $('#modal-egress-stock').modal('show');
         });
 
+        function egressRound(v) { return Math.round(v * 100) / 100; }
+
         function updateEgressSummary() {
             if (egressIsFraction) {
-                const units = parseInt($('#egress-quantity').val()) || 0;
-                const fracs = parseInt($('#egress-extra-fractions').val()) || 0;
-                const total = (units * egressFracQty) + fracs;
+                const units = parseInt($('#egress-quantity').val())    || 0;  // solo entero
+                const fracs = parseFloat($('#egress-extra-fractions').val()) || 0; // permite decimal
+                const total = egressRound((units * egressFracQty) + fracs);
 
                 if (total <= 0) { $('#egress-summary-text').text('—'); checkEgressReady(); return; }
 
@@ -874,14 +876,14 @@
                 }
 
                 const fullU = Math.floor(total / egressFracQty);
-                const remF  = total % egressFracQty;
+                const remF  = egressRound(total % egressFracQty);
                 let text = '';
                 if (fullU > 0 && remF > 0) text = `${fullU} ${egressUnitName} + ${remF} ${egressFracName}`;
                 else if (fullU > 0)         text = `${fullU} ${egressUnitName}`;
                 else                        text = `${remF} ${egressFracName}`;
                 $('#egress-summary-text').text(text);
             } else {
-                const qty = parseInt($('#egress-quantity').val()) || 0;
+                const qty = parseFloat($('#egress-quantity').val()) || 0;
                 if (qty <= 0) { $('#egress-summary-text').text('—'); checkEgressReady(); return; }
 
                 if (qty > egressLotData.stock) {
