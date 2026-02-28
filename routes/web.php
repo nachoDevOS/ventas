@@ -84,6 +84,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::get('items/{id}/sales/ajax/list', [ItemController::class, 'listSales']);
     Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');
     Route::post('items/{id}/stock/{stockId}/egress', [ItemController::class, 'egressStock'])->name('items-stock.egress');
+    Route::delete('items/{id}/stock/{stockId}/egress/{egressId}', [ItemController::class, 'deleteEgress'])->name('items-stock.egress.destroy');
     Route::delete('items/{id}/stock/{stock}', [ItemController::class, 'destroyStock'])->name('items-stock.destroy');
     Route::patch('items/{id}/minimum', [ItemController::class, 'updateMinimum'])->name('items.update.minimum');
 

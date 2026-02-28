@@ -260,11 +260,12 @@
                                     <table class="table table-condensed" style="margin: 0; font-size: 11px; background: transparent;">
                                         <thead>
                                             <tr style="background: #fdecea;">
-                                                <th style="width: 14%; padding: 4px 8px;">Fecha</th>
-                                                <th style="width: 14%; padding: 4px 8px; text-align: right;">Cant. Unidades</th>
-                                                <th style="width: 14%; padding: 4px 8px; text-align: right;">Cant. Fracciones</th>
+                                                <th style="width: 13%; padding: 4px 8px;">Fecha</th>
+                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Cant. Unidades</th>
+                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Cant. Fracciones</th>
                                                 <th style="padding: 4px 8px;">Razón / Motivo</th>
-                                                <th style="width: 14%; padding: 4px 8px;">Registrado por</th>
+                                                <th style="width: 13%; padding: 4px 8px;">Registrado por</th>
+                                                <th style="width: 5%; padding: 4px 8px;"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -288,6 +289,22 @@
                                                     <td style="padding: 3px 8px;">{{ $egreso->reason }}</td>
                                                     <td style="padding: 3px 8px; color: #888;">
                                                         {{ $egreso->registerUser->name ?? '—' }}
+                                                    </td>
+                                                    <td style="padding: 3px 8px; text-align: center;">
+                                                        @if (auth()->user()->hasPermission('edit_items'))
+                                                            <form method="POST"
+                                                                  action="{{ route('items-stock.egress.destroy', ['id' => $value->item_id, 'stockId' => $value->id, 'egressId' => $egreso->id]) }}"
+                                                                  onsubmit="return confirm('¿Eliminar este egreso y restaurar el stock al lote?')"
+                                                                  style="display:inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                        class="btn btn-xs btn-danger"
+                                                                        title="Eliminar egreso y restaurar stock">
+                                                                    <i class="voyager-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach

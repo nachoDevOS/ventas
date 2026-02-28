@@ -433,8 +433,9 @@ class ItemController extends Controller
                 $itemStock->save();
 
                 // 2. Registrar fracción sobrante como usada
+                $fractionRecord = null;
                 if ($fractionsRemainder > 0) {
-                    ItemStockFraction::create([
+                    $fractionRecord = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity'     => $fractionsRemainder,
                         'price'        => 0,
@@ -442,14 +443,15 @@ class ItemController extends Controller
                     ]);
                 }
 
-                // 3. Registrar egreso en tabla dedicada
+                // 3. Registrar egreso en tabla dedicada (guardando FK a la fracción para poder revertir)
                 ItemStockEgress::create([
-                    'item_stock_id'      => $itemStock->id,
-                    'item_id'            => $id,
-                    'quantity'           => $unitsToDeduct,
-                    'quantity_fractions' => $fractionsRemainder,
-                    'reason'             => $reason,
-                    'register_user_id'   => auth()->id(),
+                    'item_stock_id'          => $itemStock->id,
+                    'item_id'                => $id,
+                    'quantity'               => $unitsToDeduct,
+                    'quantity_fractions'     => $fractionsRemainder,
+                    'item_stock_fraction_id' => $fractionRecord?->id,
+                    'reason'                 => $reason,
+                    'register_user_id'       => auth()->id(),
                 ]);
 
             } else {
@@ -490,6 +492,45 @@ class ItemController extends Controller
             DB::rollback();
             return redirect()->route('voyager.items.show', ['id' => $id])
                 ->with(['message' => 'Error al registrar egreso: ' . $e->getMessage(), 'alert-type' => 'error']);
+        }
+    }
+
+    public function deleteEgress(Request $request, $id, $stockId, $egressId)
+    {
+        $this->custom_authorize('edit_items');
+
+        $itemStock = ItemStock::where('id', $stockId)
+            ->where('item_id', $id)
+            ->where('deleted_at', null)
+            ->firstOrFail();
+
+        $egress = ItemStockEgress::where('id', $egressId)
+            ->where('item_stock_id', $stockId)
+            ->whereNull('deleted_at')
+            ->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            // Restaurar stock del lote
+            $itemStock->stock += $egress->quantity;
+            $itemStock->save();
+
+            // Eliminar fracción sobrante si fue creada por este egreso
+            if ($egress->item_stock_fraction_id) {
+                ItemStockFraction::where('id', $egress->item_stock_fraction_id)->delete();
+            }
+
+            // Soft-delete del egreso
+            $egress->delete();
+
+            DB::commit();
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Egreso eliminado y stock restaurado correctamente.', 'alert-type' => 'success']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Error al eliminar egreso: ' . $e->getMessage(), 'alert-type' => 'error']);
         }
     }
 

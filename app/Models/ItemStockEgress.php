@@ -16,6 +16,7 @@ class ItemStockEgress extends Model
         'item_id',
         'quantity',
         'quantity_fractions',
+        'item_stock_fraction_id',
         'reason',
         'register_user_id',
     ];
@@ -23,6 +24,11 @@ class ItemStockEgress extends Model
     public function itemStock()
     {
         return $this->belongsTo(ItemStock::class, 'item_stock_id');
+    }
+
+    public function itemStockFraction()
+    {
+        return $this->belongsTo(ItemStockFraction::class, 'item_stock_fraction_id');
     }
 
     public function item()
