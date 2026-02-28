@@ -60,7 +60,6 @@ class EgresController extends Controller
 
                 if ($wholeUnits > 0) {
                     $itemStock->decrement('stock', $wholeUnits);
-                    $this->autoZeroStock($itemStock, $item->fractionQuantity);
 
                     EgresDetail::create([
                         'egres_id'        => $egress->id,
@@ -72,6 +71,7 @@ class EgresController extends Controller
                         'amount'          => 0,
                         'status'          => 1,
                     ]);
+                    $this->autoZeroStock($itemStock, $item->fractionQuantity);
                 }
 
                 if ($extraFractions > 0) {
