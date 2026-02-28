@@ -6,13 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('item_stock_egresos', function (Blueprint $table) {
+        Schema::create('egres_details', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('egress_id')->nullable()->constrained('egresos');          // cabecera de egreso
-            $table->foreignId('itemStock_id')->constrained('item_stocks');               // lote de origen
+            $table->foreignId('egres_id')->nullable()->constrained('egres');
+            $table->foreignId('itemStock_id')->constrained('item_stocks');
             $table->foreignId('itemStockFraction_id')->nullable()->constrained('item_stock_fractions');
 
             $table->decimal('pricePurchase', 10, 2)->nullable();
@@ -20,10 +22,9 @@ return new class extends Migration
             $table->decimal('price', 10, 2)->nullable();
             $table->decimal('quantity', 10, 2)->nullable();
             $table->decimal('amount', 10, 2)->nullable();
-
             $table->smallInteger('status')->default(1);
 
-            $table->timestamps();            
+            $table->timestamps();
             $table->foreignId('registerUser_id')->nullable()->constrained('users');
             $table->string('registerRole')->nullable();
 
@@ -34,8 +35,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('item_stock_egresos');
+        Schema::dropIfExists('egres_details');
     }
 };

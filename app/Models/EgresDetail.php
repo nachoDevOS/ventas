@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\RegistersUserEvents;
 
-class ItemStockEgress extends Model
+class EgresDetail extends Model
 {
     use SoftDeletes, RegistersUserEvents;
 
-    protected $table = 'item_stock_egresos';
+    protected $table = 'egres_details';
 
     protected $fillable = [
-        'egress_id',
+        'egres_id',
         'itemStock_id',
         'itemStockFraction_id',
 
@@ -32,9 +32,9 @@ class ItemStockEgress extends Model
         'deleteObservation',
     ];
 
-    public function egress()
+    public function egres()
     {
-        return $this->belongsTo(Egress::class, 'egress_id');
+        return $this->belongsTo(Egres::class, 'egres_id');
     }
 
     public function itemStock()

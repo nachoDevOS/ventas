@@ -55,7 +55,7 @@
                             $marginFrac    = (($totalFracSale - $value->pricePurchase) / $value->pricePurchase) * 100;
                         }
 
-                        $egresos      = $value->itemStockEgresos;
+                        $egresos      = $value->egresDetails;
                         $egresosCount = $egresos->count();
                     @endphp
                     <tr>
@@ -251,8 +251,8 @@
                     {{-- Fila de historial de egresos (oculta por defecto) --}}
                     @if ($egresosCount > 0)
                         @php
-                            // Agrupar por egress_id (una operación = una fila, como Sale)
-                            $egresosGrouped = $egresos->groupBy('egress_id');
+                            // Agrupar por egres_id (una operación = una fila, como Sale)
+                            $egresosGrouped = $egresos->groupBy('egres_id');
                         @endphp
                         <tr id="egresos-row-{{ $value->id }}" style="display: none; background: #fff9f9;">
                             <td colspan="9" style="padding: 0; border-top: none;">
@@ -300,7 +300,7 @@
                                                         @endif
                                                     </td>
                                                     <td style="padding: 3px 8px;">
-                                                        {{ $first->egress->reason ?? '—' }}
+                                                        {{ $first->egres->reason ?? '—' }}
                                                     </td>
                                                     <td style="padding: 3px 8px; color: #888;">
                                                         {{ $first->registerUser->name ?? '—' }}

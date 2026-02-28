@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\Cashier;
-use App\Models\ItemStockEgress;
+use App\Models\EgresDetail;
 
 class Controller extends BaseController
 {
@@ -237,8 +237,8 @@ class Controller extends BaseController
                     ->get()
                     ->sum('quantity');
 
-            $itemStockEgress = ItemStockEgress::with(['egress'])
-                    ->whereHas('egress', function ($q) {
+            $itemStockEgress = EgresDetail::with(['egres'])
+                    ->whereHas('egres', function ($q) {
                         $q->where('deleted_at', null);
                     })
                     ->where('itemStock_id',$detail->itemStock_id)
@@ -259,14 +259,12 @@ class Controller extends BaseController
                 $detail->delete();
             } 
             else
+            {
                 // Si es fracción, eliminamos el registro de fracción (soft delete)
                 $detail->itemStockFraction->delete();  
             }
 
             $detail->delete();   
-
         }
     }
-
-    
 }

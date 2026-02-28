@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('egresos', function (Blueprint $table) {
+        Schema::create('egres', function (Blueprint $table) {
             $table->id();
 
             $table->text('reason');                                   // Motivo general del egreso
@@ -28,8 +31,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('egresos');
+        Schema::dropIfExists('egres');
     }
 };

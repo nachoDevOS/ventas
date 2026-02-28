@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\RegistersUserEvents;
 
-class Egress extends Model
+class Egres extends Model
 {
     use SoftDeletes, RegistersUserEvents;
 
-    protected $table = 'egresos';
+    protected $table = 'egres';
 
     protected $fillable = [
         'reason',
@@ -28,7 +28,7 @@ class Egress extends Model
 
     public function details()
     {
-        return $this->hasMany(ItemStockEgress::class, 'egress_id');
+        return $this->hasMany(EgresDetail::class, 'egres_id');
     }
 
     public function registerUser()

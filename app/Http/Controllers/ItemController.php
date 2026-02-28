@@ -11,8 +11,8 @@ use App\Models\IncomeDetail;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\ItemStockFraction;
-use App\Models\ItemStockEgress;
-use App\Models\Egress;
+use App\Models\EgresDetail;
+use App\Models\Egres;
 use Carbon\Carbon;
 
 class ItemController extends Controller
@@ -233,7 +233,7 @@ class ItemController extends Controller
         $paginate = request('paginate') ?? 10;
         $status = request('status') ?? null;
         $search = request('search') ?? null;
-        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions', 'itemStockEgresos.registerUser', 'itemStockEgresos.egress', 'itemStockEgresos.presentation'])
+        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions', 'egresDetails.registerUser', 'egresDetails.egres', 'egresDetails.presentation'])
             ->where('item_id', $id)
             ->where(function($query) use ($search){
                 $query->whereRaw($search ? "lote like '%$search%'" : 1);
@@ -405,7 +405,7 @@ class ItemController extends Controller
             $reason = trim($request->reason ?? '');
 
             // 1. Crear cabecera de egreso (como Sale en ventas)
-            $egress = Egress::create([
+            $egress = Egres::create([
                 'reason'          => $reason,
                 'dateEgress'      => now()->toDateString(),
                 'status'          => 'Activo',
@@ -437,8 +437,8 @@ class ItemController extends Controller
                 if ($wholeUnits > 0) {
                     $itemStock->decrement('stock', $wholeUnits);
 
-                    ItemStockEgress::create([
-                        'egress_id'        => $egress->id,
+                    EgresDetail::create([
+                        'egres_id'         => $egress->id,
                         'itemStock_id'     => $itemStock->id,
                         'pricePurchase'    => $itemStock->pricePurchase,
                         'presentation_id'  => $item->presentation_id,
@@ -468,8 +468,8 @@ class ItemController extends Controller
                         'amount'       => 0,
                     ]);
 
-                    ItemStockEgress::create([
-                        'egress_id'           => $egress->id,
+                    EgresDetail::create([
+                        'egres_id'            => $egress->id,
                         'itemStock_id'        => $itemStock->id,
                         'itemStockFraction_id'=> $fraction->id,
                         'pricePurchase'       => $itemStock->pricePurchase,
@@ -499,8 +499,8 @@ class ItemController extends Controller
 
                 $itemStock->decrement('stock', $quantity);
 
-                ItemStockEgress::create([
-                    'egress_id'       => $egress->id,
+                EgresDetail::create([
+                    'egres_id'        => $egress->id,
                     'itemStock_id'    => $itemStock->id,
                     'pricePurchase'   => $itemStock->pricePurchase,
                     'presentation_id' => $item->presentation_id,
@@ -527,8 +527,8 @@ class ItemController extends Controller
     {
         $this->custom_authorize('edit_items');
 
-        // $egressId es el ID de la cabecera Egress (como se elimina una Sale completa)
-        $egressHeader = Egress::with(['details' => function ($q) use ($stockId) {
+        // $egressId es el ID de la cabecera Egres (como se elimina una Sale completa)
+        $egressHeader = Egres::with(['details' => function ($q) use ($stockId) {
             $q->where('itemStock_id', $stockId)->whereNull('deleted_at');
         }])->findOrFail($egressId);
 
@@ -546,7 +546,7 @@ class ItemController extends Controller
 
                     $saleUnits   = SaleDetail::where('itemStock_id', $stockId)
                         ->where('dispensed', 'Entero')->whereNull('deleted_at')->sum('quantity');
-                    $egressUnits = ItemStockEgress::where('itemStock_id', $stockId)
+                    $egressUnits = EgresDetail::where('itemStock_id', $stockId)
                         ->whereNull('itemStockFraction_id')->whereNull('deleted_at')
                         ->where('id', '!=', $detail->id)->sum('quantity');
 
