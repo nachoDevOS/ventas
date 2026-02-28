@@ -452,15 +452,6 @@ class ItemController extends Controller
 
                 // 2b. Egreso de fracciones (igual que SaleDetail dispensed=Fraccionado)
                 if ($extraFractions > 0) {
-                    // Calcular unidades que se "abren" con estas fracciones (igual que SaleController)
-                    $fractions_sold_before = $itemStock->itemStockFractions()->whereNull('deleted_at')->sum('quantity');
-                    $fractions_sold_after  = $fractions_sold_before + $extraFractions;
-                    $opened_units_after    = $fractions_sold_after / $item->fractionQuantity;
-
-                    if ($itemStock->stock == $opened_units_after) {
-                        $itemStock->decrement('stock', $opened_units_after);
-                    }
-
                     $fraction = ItemStockFraction::create([
                         'itemStock_id' => $itemStock->id,
                         'quantity'     => $extraFractions,
@@ -479,6 +470,7 @@ class ItemController extends Controller
                         'amount'              => 0,
                         'status'              => 1,
                     ]);
+                    $this->autoZeroStock($itemStock, $item->fractionQuantity);
                 }
 
             } else {

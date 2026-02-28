@@ -220,14 +220,14 @@ class Controller extends BaseController
         // =================================================================================
     }
 
-    // Auto-zero de stock: si tras descontar unidades enteras, el stock restante
-    // queda exactamente igual a las unidades ya consumidas por fracciones → ponerlo en 0.
-    // Se llama después de cada decrement() de unidades enteras (ventas y egresos).
+    // Auto-zero de stock: verifica si el stock restante ya está completamente consumido
+    // por fracciones existentes → lo pone en 0.
+    // Usar query fresca para incluir cualquier fracción recién creada.
     protected function autoZeroStock($itemStock, $fractionQuantity)
     {
         if ($fractionQuantity <= 0) return;
 
-        $fracs_used       = $itemStock->itemStockFractions->sum('quantity');
+        $fracs_used       = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
         $opened_units_now = $fracs_used / $fractionQuantity;
 
         if ($itemStock->stock > 0 && $itemStock->stock == $opened_units_now) {

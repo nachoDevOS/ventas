@@ -207,21 +207,13 @@ class SaleController extends Controller
 
                 // Lógica para venta de fracciones
                 if ($quantity_fraction > 0) {
-                    // Obtener el total de fracciones vendidas ANTES de la venta actual
                     $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
+                    $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
+                    $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
 
-                    // Calcular las unidades "abiertas" después de esta venta
-                    $fractions_sold_after = $fractions_sold_before + $quantity_fraction;
-                    $opened_units_after = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-
-                    if($opened_units_after > $itemStock->stock){
+                    if ($opened_units_after > $itemStock->stock) {
                         DB::rollBack();
-                        return  redirect()->route('sales.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error'])->withInput();
-                    }
-
-                    // Si la venta de esta fracción provocó que se completara y "abriera" una nueva unidad, descontamos del stock principal
-                    if ($itemStock->stock == $opened_units_after) {
-                        $itemStock->decrement('stock', $opened_units_after);
+                        return redirect()->route('sales.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error'])->withInput();
                     }
 
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
@@ -248,6 +240,7 @@ class SaleController extends Controller
                         'discount' => $discount_fraction,
                         'amount' => $amount_fraction,
                     ]);
+                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
                 }
             }
 
@@ -456,21 +449,15 @@ class SaleController extends Controller
 
                 // Venta de Fracciones
                 if ($quantity_fraction > 0) {
-                    // Lógica para descontar stock si las fracciones completan una unidad
                     $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
+                    $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
+                    $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
 
-                    $fractions_sold_after = $fractions_sold_before + $quantity_fraction;
-
-                    $opened_units_after = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-
-                    if($opened_units_after > $itemStock->stock){
+                    if ($opened_units_after > $itemStock->stock) {
                         DB::rollBack();
-                        return  redirect()
+                        return redirect()
                                 ->route('sales.index')
                                 ->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
-                    }
-                    if ($itemStock->stock == $opened_units_after) {
-                        $itemStock->decrement('stock', $opened_units_after);
                     }
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
                     $bruto_fraction = $value['price_fraction'] * $quantity_fraction;
@@ -497,6 +484,7 @@ class SaleController extends Controller
                         'discount' => $discount_fraction,
                         'amount' => $amount_fraction,
                     ]);
+                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
                 }
 
                 
