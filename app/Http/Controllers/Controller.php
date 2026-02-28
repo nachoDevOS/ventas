@@ -253,16 +253,9 @@ class Controller extends BaseController
             $itemStock->decrement('stock', $itemStockUnit + $itemStockEgress);
 
 
-
-
             if ($detail->itemStockFraction_id != null) { //si es diferenete de null entonce es una dispensacion en fraccion
-                $detail->delete();
-            } 
-            else
-            {
-                // Si es fracción, eliminamos el registro de fracción (soft delete)
                 $detail->itemStockFraction->delete();  
-            }
+            } 
 
             $detail->delete();   
         }

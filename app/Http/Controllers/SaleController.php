@@ -202,6 +202,16 @@ class SaleController extends Controller
                     ]);
 
                     $itemStock->decrement('stock', $quantity_unit);
+
+                    // Auto-zero: si tras el descuento el stock restante ya está
+                    // totalmente consumido por fracciones existentes → ponerlo en 0
+                    if ($itemStock->dispensedQuantity > 0) {
+                        $fracs_used       = $itemStock->itemStockFractions->sum('quantity');
+                        $opened_units_now = $fracs_used / $itemStock->dispensedQuantity;
+                        if ($itemStock->stock > 0 && $itemStock->stock == $opened_units_now) {
+                            $itemStock->decrement('stock', $opened_units_now);
+                        }
+                    }
                 }
 
                 // Lógica para venta de fracciones
@@ -450,6 +460,16 @@ class SaleController extends Controller
                     ]);
 
                     $itemStock->decrement('stock', $quantity_unit);
+
+                    // Auto-zero: si tras el descuento el stock restante ya está
+                    // totalmente consumido por fracciones existentes → ponerlo en 0
+                    if ($itemStock->dispensedQuantity > 0) {
+                        $fracs_used       = $itemStock->itemStockFractions->sum('quantity');
+                        $opened_units_now = $fracs_used / $itemStock->dispensedQuantity;
+                        if ($itemStock->stock > 0 && $itemStock->stock == $opened_units_now) {
+                            $itemStock->decrement('stock', $opened_units_now);
+                        }
+                    }
                 }
 
                 // Venta de Fracciones

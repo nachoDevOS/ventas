@@ -437,6 +437,14 @@ class ItemController extends Controller
                 if ($wholeUnits > 0) {
                     $itemStock->decrement('stock', $wholeUnits);
 
+                    // Auto-zero: si tras el descuento el stock restante ya está
+                    // totalmente consumido por fracciones existentes → ponerlo en 0
+                    $fracs_used       = $itemStock->itemStockFractions->sum('quantity');
+                    $opened_units_now = $fracs_used / $item->fractionQuantity;
+                    if ($itemStock->stock > 0 && $itemStock->stock == $opened_units_now) {
+                        $itemStock->decrement('stock', $opened_units_now);
+                    }
+
                     EgresDetail::create([
                         'egres_id'         => $egress->id,
                         'itemStock_id'     => $itemStock->id,

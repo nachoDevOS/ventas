@@ -24,7 +24,8 @@
       "Bash(mysql -u root -e \"DESCRIBE item_stock_egresos\" ventas)",
       "Bash(php artisan:*)",
       "Bash(php -r \"require ''vendor/autoload.php''; echo ''Autoload OK'';\")",
-      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; echo ''OK'';\")"
+      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; echo ''OK'';\")",
+      "Bash(php -l app/Http/Controllers/ItemController.php)"
     ]
   }
 }
