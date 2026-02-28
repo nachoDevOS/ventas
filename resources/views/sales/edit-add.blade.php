@@ -3,26 +3,7 @@
 @section('page_title', isset($sale) ? 'Editar Venta' : 'Añadir Venta')
 
 @section('page_header')
-    {{-- <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-bordered">
-                    <div class="panel-body" style="padding: 0px">
-                        <div class="col-md-8" style="padding: 0px">
-                            <h1 class="page-title">
-                                <i class="fa-solid fa-cart-plus"></i> {{ isset($sale) ? 'Editar Venta' : 'Añadir Venta' }}
-                            </h1>
-                        </div>
-                        <div class="col-md-4 text-right" style="margin-top: 30px">
-                            <a href="{{ route('sales.index') }}" class="btn btn-warning">
-                                <i class="voyager-plus"></i> <span>Volver</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> --}}
+
 @stop
 
 @section('content')
@@ -33,14 +14,14 @@
                 @method('PUT')
             @endif
             <div class="row row-layout">
-                {{-- @if (!$globalFuntion_cashierMoney['cashier'])
+                @if (!$globalFuntion_cashierMoney['cashier'])
                     <div class="col-md-12 col-sm-12">
                         <div class="panel panel-bordered alert alert-warning">
                             <strong><i class="voyager-info-circled"></i> Advertencia:</strong>
                             <p class="mt-1">No puedes realizar ventas porque no tienes una caja abierta.</p>
                         </div>
                     </div>
-                @endif --}}
+                @endif
                 <div class="col-md-3 payment-col">
                     <style>
                         /* ── Payment panel ── */

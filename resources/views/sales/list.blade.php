@@ -188,6 +188,11 @@
                                title="Ver" class="btn btn-sm btn-warning view">
                                 <i class="voyager-eye"></i>
                             </a>
+                            <a href="{{ route('sales.prinf', ['id' => $item->id]) }}"
+                               title="Imprimir" target="_blank"
+                               class="btn btn-sm btn-default">
+                                <i class="fa-solid fa-print"></i>
+                            </a>
                         @endif
 
                         @if (auth()->user()->hasPermission('edit_sales'))

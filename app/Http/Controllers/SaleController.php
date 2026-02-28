@@ -576,9 +576,9 @@ class SaleController extends Controller
         $sale = Sale::with([
             'person',
             'register',
-            'branch',
             'saleDetails' => function ($q) {
-                $q->where('deleted_at', null);
+                $q->where('deleted_at', null)
+                  ->with(['itemStock.item.presentation', 'itemStock.item.fractionPresentation']);
             },
         ])
             ->where('id', $id)
@@ -588,9 +588,9 @@ class SaleController extends Controller
             $transaction = SaleTransaction::with(['transaction'])
                 ->where('sale_id', $sale->id)
                 ->first();
-            return view('sales.prinfSale', compact('sale', 'transaction'));
+            return view('sales.printSale', compact('sale', 'transaction'));
         } else {
-            return view('sales.prinfProforma', compact('sale'));
+            return view('sales.printProforma', compact('sale'));
         }
     }
 
