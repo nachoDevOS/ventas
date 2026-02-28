@@ -25,7 +25,8 @@
       "Bash(php artisan:*)",
       "Bash(php -r \"require ''vendor/autoload.php''; echo ''Autoload OK'';\")",
       "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; echo ''OK'';\")",
-      "Bash(php -l app/Http/Controllers/ItemController.php)"
+      "Bash(php -l app/Http/Controllers/ItemController.php)",
+      "Bash(find /home/user/Escritorio/projects/ventas/app/Models -name \"*.php\" -exec grep -l \"devolucion\\\\|return\\\\|refund\\\\|egres\" {} ;)"
     ]
   }
 }

@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Person;
 use App\Models\SaleTransaction;
+use App\Models\Item;
+use App\Models\ItemStock;
+use App\Models\Egres;
 
 class IndexController extends Controller
 {
@@ -183,6 +186,32 @@ class IndexController extends Controller
         // ── KPIs extra ───────────────────────────────────────────────────────
         $people = Person::whereNull('deleted_at')->count();
 
+        // ── Stock crítico: ítems con stock total < stockMinimum ───────────────
+        $criticalStockCount = Item::whereNull('deleted_at')
+            ->where('stockMinimum', '>', 0)
+            ->with(['itemStocks' => function ($q) {
+                $q->whereNull('deleted_at');
+            }])
+            ->get()
+            ->filter(function ($item) {
+                $totalStock = $item->itemStocks->sum('stock');
+                return $totalStock < $item->stockMinimum;
+            })
+            ->count();
+
+        // ── Productos por vencer (próximos 30 días) ───────────────────────────
+        $expiringCount = ItemStock::whereNull('deleted_at')
+            ->where('stock', '>', 0)
+            ->whereNotNull('expirationDate')
+            ->whereDate('expirationDate', '>=', today())
+            ->whereDate('expirationDate', '<=', today()->addDays(30))
+            ->count();
+
+        // ── Egresos del día ───────────────────────────────────────────────────
+        $egresosHoyCount = Egres::whereNull('deleted_at')
+            ->whereDate('dateEgress', today())
+            ->count();
+
         // ── Cumpleaños ────────────────────────────────────────────────────────
         $todayMonthDay = Carbon::now()->format('m-d');
 
@@ -221,6 +250,9 @@ class IndexController extends Controller
             'paymentBreakdown'  => $paymentBreakdown,
             'todayBirthdaysCount'  => $todayBirthdaysCount,
             'upcomingBirthdays'    => $upcomingBirthdays->values()->all(),
+            'criticalStock'        => $criticalStockCount,
+            'expiringProducts'     => $expiringCount,
+            'egresosHoy'           => $egresosHoyCount,
         ]);
     }
 }

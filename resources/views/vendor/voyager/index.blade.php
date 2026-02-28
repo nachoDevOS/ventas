@@ -126,6 +126,52 @@
             </div>
         </div>
 
+        <!-- KPI Cards - Alertas de inventario -->
+        <div class="row">
+            <div class="col-md-4 col-sm-6">
+                <a href="{{ route('voyager.items.index') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
+                    <div class="panel-body">
+                        <div class="kpi-icon" style="background-color: rgba(231,76,60,0.12);">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: #c0392b;"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Stock Crítico</p>
+                            <h3 class="kpi-value" style="color: #c0392b;">{{ $global_index['criticalStock'] }}</h3>
+                            <small class="text-muted">{{ $global_index['criticalStock'] == 1 ? 'ítem bajo mínimo' : 'ítems bajo mínimo' }}</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <a href="{{ route('items.expiry') }}" class="panel panel-bordered dashboard-kpi" style="display: block; color: inherit; text-decoration: none;">
+                    <div class="panel-body">
+                        <div class="kpi-icon" style="background-color: rgba(230,126,34,0.12);">
+                            <i class="fa-solid fa-clock" style="color: #d35400;"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Vencen Pronto</p>
+                            <h3 class="kpi-value" style="color: #d35400;">{{ $global_index['expiringProducts'] }}</h3>
+                            <small class="text-muted">{{ $global_index['expiringProducts'] == 1 ? 'lote en 30 días' : 'lotes en 30 días' }}</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="panel panel-bordered dashboard-kpi">
+                    <div class="panel-body">
+                        <div class="kpi-icon" style="background-color: rgba(142,68,173,0.12);">
+                            <i class="fa-solid fa-arrow-trend-down" style="color: #8e44ad;"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Egresos de Hoy</p>
+                            <h3 class="kpi-value" style="color: #8e44ad;">{{ $global_index['egresosHoy'] }}</h3>
+                            <small class="text-muted">{{ $global_index['egresosHoy'] == 1 ? 'egreso registrado' : 'egresos registrados' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @if ($globalFuntion_cashier)
             @if ($globalFuntion_cashier->status == 'Abierta' || $globalFuntion_cashier->status == 'Apertura Pendiente')
 
