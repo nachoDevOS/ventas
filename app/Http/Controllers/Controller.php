@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\Cashier;
+use App\Models\ItemStockEgress;
 
 class Controller extends BaseController
 {
@@ -233,6 +234,29 @@ class Controller extends BaseController
                 // Si es fracción, eliminamos el registro de fracción (soft delete)
                 $detail->itemStockFraction->delete();
 
+                $itemStockUnit = SaleDetail::with(['sale'])
+                    ->whereHas('sale', function ($q) {
+                        $q->where('deleted_at', null);
+                    })
+                    ->where('itemStock_id',$detail->itemStock_id)
+                    ->where('dispensed','Entero')
+                    ->where('deleted_at', null)
+                    ->get()
+                    ->sum('quantity');
+
+                $itemStockEgress = ItemStockEgress::where('itemStock_id',$detail->itemStock_id)
+                    ->where('itemStockFraction_id', null)
+                    ->where('deleted_at', null)
+                    ->get()
+                    ->sum('quantity');
+               
+
+
+                $itemStock->update([
+                    'stock' => $itemStock->quantity
+                ]);
+                $itemStock->decrement('stock', ($itemStockUnit));
+                
                 $detail->delete();   
             }
         }

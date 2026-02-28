@@ -12,6 +12,7 @@ use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\ItemStockFraction;
 use App\Models\ItemStockEgress;
+use App\Models\Egress;
 use Carbon\Carbon;
 
 class ItemController extends Controller
@@ -232,7 +233,7 @@ class ItemController extends Controller
         $paginate = request('paginate') ?? 10;
         $status = request('status') ?? null;
         $search = request('search') ?? null;
-        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions', 'itemStockEgresos.registerUser'])
+        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions', 'itemStockEgresos.registerUser', 'itemStockEgresos.egress', 'itemStockEgresos.presentation'])
             ->where('item_id', $id)
             ->where(function($query) use ($search){
                 $query->whereRaw($search ? "lote like '%$search%'" : 1);
@@ -392,67 +393,94 @@ class ItemController extends Controller
     {
         $this->custom_authorize('edit_items');
 
-        $item      = Item::findOrFail($id);
+        $item      = Item::with(['presentation', 'fractionPresentation'])->findOrFail($id);
         $itemStock = ItemStock::with(['itemStockFractions'])
             ->where('id', $stockId)
             ->where('item_id', $id)
-            ->where('deleted_at', null)
+            ->whereNull('deleted_at')
             ->firstOrFail();
 
         DB::beginTransaction();
         try {
             $reason = trim($request->reason ?? '');
 
+            // 1. Crear cabecera de egreso (como Sale en ventas)
+            $egress = Egress::create([
+                'reason'          => $reason,
+                'dateEgress'      => now()->toDateString(),
+                'status'          => 'Activo',
+                'registerUser_id' => auth()->id(),
+            ]);
+
             if ($item->fraction && $item->fractionQuantity > 0) {
                 $wholeUnits     = max(0, intval($request->quantity ?? 0));
                 $extraFractions = max(0, intval($request->extraFractions ?? 0));
-                $totalToRemove  = ($wholeUnits * $item->fractionQuantity) + $extraFractions;
 
-                if ($totalToRemove <= 0) {
+                if ($wholeUnits == 0 && $extraFractions == 0) {
                     DB::rollback();
                     return redirect()->back()
                         ->with(['message' => 'Debe ingresar al menos una unidad o fracción.', 'alert-type' => 'error']);
                 }
 
-                // Stock fraccionario disponible real del lote
+                // Validar contra stock disponible total
                 $usedFractions      = $itemStock->itemStockFractions->sum('quantity');
                 $availableFractions = ($itemStock->stock * $item->fractionQuantity) - $usedFractions;
+                $totalRequested     = ($wholeUnits * $item->fractionQuantity) + $extraFractions;
 
-                if ($totalToRemove > $availableFractions) {
+                if ($totalRequested > $availableFractions) {
                     DB::rollback();
                     return redirect()->back()
                         ->with(['message' => 'La cantidad supera el stock disponible del lote (' . $availableFractions . ' ' . ($item->fractionPresentation->name ?? 'fracciones') . ').', 'alert-type' => 'error']);
                 }
 
-                // Unidades enteras a descontar y fracciones sobrantes
-                $unitsToDeduct      = (int) floor($totalToRemove / $item->fractionQuantity);
-                $fractionsRemainder = (int) ($totalToRemove % $item->fractionQuantity);
+                // 2a. Egreso de unidades enteras (igual que SaleDetail dispensed=Entero)
+                if ($wholeUnits > 0) {
+                    $itemStock->decrement('stock', $wholeUnits);
 
-                // 1. Reducir stock del lote original
-                $itemStock->stock -= $unitsToDeduct;
-                $itemStock->save();
-
-                // 2. Registrar fracción sobrante como usada
-                $fractionRecord = null;
-                if ($fractionsRemainder > 0) {
-                    $fractionRecord = ItemStockFraction::create([
-                        'itemStock_id' => $itemStock->id,
-                        'quantity'     => $fractionsRemainder,
-                        'price'        => 0,
-                        'amount'       => 0,
+                    ItemStockEgress::create([
+                        'egress_id'        => $egress->id,
+                        'itemStock_id'     => $itemStock->id,
+                        'pricePurchase'    => $itemStock->pricePurchase,
+                        'presentation_id'  => $item->presentation_id,
+                        'price'            => $itemStock->priceSale,
+                        'quantity'         => $wholeUnits,
+                        'amount'           => 0,
+                        'status'           => 1,
+                        'registerUser_id'  => auth()->id(),
                     ]);
                 }
 
-                // 3. Registrar egreso en tabla dedicada (guardando FK a la fracción para poder revertir)
-                ItemStockEgress::create([
-                    'item_stock_id'          => $itemStock->id,
-                    'item_id'                => $id,
-                    'quantity'               => $unitsToDeduct,
-                    'quantity_fractions'     => $fractionsRemainder,
-                    'item_stock_fraction_id' => $fractionRecord?->id,
-                    'reason'                 => $reason,
-                    'register_user_id'       => auth()->id(),
-                ]);
+                // 2b. Egreso de fracciones (igual que SaleDetail dispensed=Fraccionado)
+                if ($extraFractions > 0) {
+                    // Calcular unidades que se "abren" con estas fracciones (igual que SaleController)
+                    $fractions_sold_before = $itemStock->itemStockFractions()->whereNull('deleted_at')->sum('quantity');
+                    $fractions_sold_after  = $fractions_sold_before + $extraFractions;
+                    $opened_units_after    = $fractions_sold_after / $item->fractionQuantity;
+
+                    if ($itemStock->stock == $opened_units_after) {
+                        $itemStock->decrement('stock', $opened_units_after);
+                    }
+
+                    $fraction = ItemStockFraction::create([
+                        'itemStock_id' => $itemStock->id,
+                        'quantity'     => $extraFractions,
+                        'price'        => 0,
+                        'amount'       => 0,
+                    ]);
+
+                    ItemStockEgress::create([
+                        'egress_id'           => $egress->id,
+                        'itemStock_id'        => $itemStock->id,
+                        'itemStockFraction_id'=> $fraction->id,
+                        'pricePurchase'       => $itemStock->pricePurchase,
+                        'presentation_id'     => $item->fractionPresentation_id,
+                        'price'               => $itemStock->dispensedPrice,
+                        'quantity'            => $extraFractions,
+                        'amount'              => 0,
+                        'status'              => 1,
+                        'registerUser_id'     => auth()->id(),
+                    ]);
+                }
 
             } else {
                 $quantity = max(0, intval($request->quantity ?? 0));
@@ -469,18 +497,18 @@ class ItemController extends Controller
                         ->with(['message' => 'La cantidad supera el stock disponible del lote (' . $itemStock->stock . ' unidades).', 'alert-type' => 'error']);
                 }
 
-                // 1. Reducir stock del lote original
-                $itemStock->stock -= $quantity;
-                $itemStock->save();
+                $itemStock->decrement('stock', $quantity);
 
-                // 2. Registrar egreso en tabla dedicada
                 ItemStockEgress::create([
-                    'item_stock_id'      => $itemStock->id,
-                    'item_id'            => $id,
-                    'quantity'           => $quantity,
-                    'quantity_fractions' => 0,
-                    'reason'             => $reason,
-                    'register_user_id'   => auth()->id(),
+                    'egress_id'       => $egress->id,
+                    'itemStock_id'    => $itemStock->id,
+                    'pricePurchase'   => $itemStock->pricePurchase,
+                    'presentation_id' => $item->presentation_id,
+                    'price'           => $itemStock->priceSale,
+                    'quantity'        => $quantity,
+                    'amount'          => 0,
+                    'status'          => 1,
+                    'registerUser_id' => auth()->id(),
                 ]);
             }
 
@@ -499,29 +527,40 @@ class ItemController extends Controller
     {
         $this->custom_authorize('edit_items');
 
+        // $egressId es el ID de la cabecera Egress (como se elimina una Sale completa)
+        $egressHeader = Egress::with(['details' => function ($q) use ($stockId) {
+            $q->where('itemStock_id', $stockId)->whereNull('deleted_at');
+        }])->findOrFail($egressId);
+
         $itemStock = ItemStock::where('id', $stockId)
             ->where('item_id', $id)
-            ->where('deleted_at', null)
-            ->firstOrFail();
-
-        $egress = ItemStockEgress::where('id', $egressId)
-            ->where('item_stock_id', $stockId)
             ->whereNull('deleted_at')
             ->firstOrFail();
 
         DB::beginTransaction();
         try {
-            // Restaurar stock del lote
-            $itemStock->stock += $egress->quantity;
-            $itemStock->save();
+            foreach ($egressHeader->details as $detail) {
+                if ($detail->itemStockFraction_id) {
+                    // Detalle fraccionario: eliminar fracción y recalcular stock desde cero
+                    ItemStockFraction::where('id', $detail->itemStockFraction_id)->delete();
 
-            // Eliminar fracción sobrante si fue creada por este egreso
-            if ($egress->item_stock_fraction_id) {
-                ItemStockFraction::where('id', $egress->item_stock_fraction_id)->delete();
+                    $saleUnits   = SaleDetail::where('itemStock_id', $stockId)
+                        ->where('dispensed', 'Entero')->whereNull('deleted_at')->sum('quantity');
+                    $egressUnits = ItemStockEgress::where('itemStock_id', $stockId)
+                        ->whereNull('itemStockFraction_id')->whereNull('deleted_at')
+                        ->where('id', '!=', $detail->id)->sum('quantity');
+
+                    $itemStock->update(['stock' => $itemStock->quantity]);
+                    $itemStock->decrement('stock', $saleUnits + $egressUnits);
+                } else {
+                    // Detalle entero: restaurar stock directamente
+                    $itemStock->increment('stock', $detail->quantity);
+                }
+
+                $detail->delete();
             }
 
-            // Soft-delete del egreso
-            $egress->delete();
+            $egressHeader->delete();
 
             DB::commit();
             return redirect()->route('voyager.items.show', ['id' => $id])

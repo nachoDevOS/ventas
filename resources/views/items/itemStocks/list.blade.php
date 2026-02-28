@@ -250,6 +250,10 @@
 
                     {{-- Fila de historial de egresos (oculta por defecto) --}}
                     @if ($egresosCount > 0)
+                        @php
+                            // Agrupar por egress_id (una operación = una fila, como Sale)
+                            $egresosGrouped = $egresos->groupBy('egress_id');
+                        @endphp
                         <tr id="egresos-row-{{ $value->id }}" style="display: none; background: #fff9f9;">
                             <td colspan="9" style="padding: 0; border-top: none;">
                                 <div style="padding: 8px 16px 10px; border-left: 3px solid #e74c3c;">
@@ -261,39 +265,50 @@
                                         <thead>
                                             <tr style="background: #fdecea;">
                                                 <th style="width: 13%; padding: 4px 8px;">Fecha</th>
-                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Cant. Unidades</th>
-                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Cant. Fracciones</th>
+                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Unidades</th>
+                                                <th style="width: 13%; padding: 4px 8px; text-align: right;">Fracciones</th>
                                                 <th style="padding: 4px 8px;">Razón / Motivo</th>
                                                 <th style="width: 13%; padding: 4px 8px;">Registrado por</th>
                                                 <th style="width: 5%; padding: 4px 8px;"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($egresos as $egreso)
+                                            @foreach ($egresosGrouped as $egressId => $detalles)
+                                                @php
+                                                    $first      = $detalles->first();
+                                                    $detEntero  = $detalles->whereNull('itemStockFraction_id')->first();
+                                                    $detFrac    = $detalles->whereNotNull('itemStockFraction_id')->first();
+                                                @endphp
                                                 <tr>
                                                     <td style="padding: 3px 8px; color: #888;">
-                                                        {{ \Carbon\Carbon::parse($egreso->created_at)->format('d/m/Y H:i') }}
+                                                        {{ \Carbon\Carbon::parse($first->created_at)->format('d/m/Y H:i') }}
                                                     </td>
                                                     <td style="padding: 3px 8px; text-align: right; font-weight: 700; color: #c0392b;">
-                                                        {{ number_format($egreso->quantity, 0) }}
-                                                        {{ $item->presentation->name ?? 'Unid.' }}
-                                                    </td>
-                                                    <td style="padding: 3px 8px; text-align: right; color: #888;">
-                                                        @if ($egreso->quantity_fractions > 0)
-                                                            {{ number_format($egreso->quantity_fractions, 0) }}
-                                                            {{ $item->fractionPresentation->name ?? 'Frac.' }}
+                                                        @if ($detEntero)
+                                                            {{ number_format($detEntero->quantity, 0) }}
+                                                            {{ $item->presentation->name ?? 'Unid.' }}
                                                         @else
-                                                            <span style="font-style: italic;">—</span>
+                                                            <span style="color: #ccc; font-style: italic;">—</span>
                                                         @endif
                                                     </td>
-                                                    <td style="padding: 3px 8px;">{{ $egreso->reason }}</td>
+                                                    <td style="padding: 3px 8px; text-align: right; color: #1565c0;">
+                                                        @if ($detFrac)
+                                                            {{ number_format($detFrac->quantity, 0) }}
+                                                            {{ $item->fractionPresentation->name ?? 'Frac.' }}
+                                                        @else
+                                                            <span style="color: #ccc; font-style: italic;">—</span>
+                                                        @endif
+                                                    </td>
+                                                    <td style="padding: 3px 8px;">
+                                                        {{ $first->egress->reason ?? '—' }}
+                                                    </td>
                                                     <td style="padding: 3px 8px; color: #888;">
-                                                        {{ $egreso->registerUser->name ?? '—' }}
+                                                        {{ $first->registerUser->name ?? '—' }}
                                                     </td>
                                                     <td style="padding: 3px 8px; text-align: center;">
                                                         @if (auth()->user()->hasPermission('edit_items'))
                                                             <form method="POST"
-                                                                  action="{{ route('items-stock.egress.destroy', ['id' => $value->item_id, 'stockId' => $value->id, 'egressId' => $egreso->id]) }}"
+                                                                  action="{{ route('items-stock.egress.destroy', ['id' => $value->item_id, 'stockId' => $value->id, 'egressId' => $egressId]) }}"
                                                                   onsubmit="return confirm('¿Eliminar este egreso y restaurar el stock al lote?')"
                                                                   style="display:inline;">
                                                                 @csrf

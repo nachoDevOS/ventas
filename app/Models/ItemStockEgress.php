@@ -4,40 +4,56 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\RegistersUserEvents;
 
 class ItemStockEgress extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, RegistersUserEvents;
 
     protected $table = 'item_stock_egresos';
 
     protected $fillable = [
-        'item_stock_id',
-        'item_id',
+        'egress_id',
+        'itemStock_id',
+        'itemStockFraction_id',
+
+        'pricePurchase',
+        'presentation_id',
+        'price',
         'quantity',
-        'quantity_fractions',
-        'item_stock_fraction_id',
-        'reason',
-        'register_user_id',
+        'amount',
+        'status',
+
+        'registerUser_id',
+        'registerRole',
+        'deleted_at',
+        'deleteUser_id',
+        'deleteRole',
+        'deleteObservation',
     ];
+
+    public function egress()
+    {
+        return $this->belongsTo(Egress::class, 'egress_id');
+    }
 
     public function itemStock()
     {
-        return $this->belongsTo(ItemStock::class, 'item_stock_id');
+        return $this->belongsTo(ItemStock::class, 'itemStock_id');
     }
 
     public function itemStockFraction()
     {
-        return $this->belongsTo(ItemStockFraction::class, 'item_stock_fraction_id');
+        return $this->belongsTo(ItemStockFraction::class, 'itemStockFraction_id');
     }
 
-    public function item()
+    public function presentation()
     {
-        return $this->belongsTo(Item::class, 'item_id');
+        return $this->belongsTo(Presentation::class, 'presentation_id');
     }
 
     public function registerUser()
     {
-        return $this->belongsTo(User::class, 'register_user_id');
+        return $this->belongsTo(User::class, 'registerUser_id');
     }
 }

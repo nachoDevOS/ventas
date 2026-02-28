@@ -15,7 +15,14 @@
       "Bash(php artisan make:migration add_stock_minimum_to_items_table --table=items)",
       "Bash(php artisan migrate --path=database/migrations/2026_02_27_150000_add_stock_minimum_to_items_table.php)",
       "Bash(php artisan migrate --path=database/migrations/2026_02_27_200000_create_item_stock_egresos_table.php)",
-      "Bash(php artisan make:migration add_item_stock_fraction_id_to_item_stock_egresos_table)"
+      "Bash(php artisan make:migration add_item_stock_fraction_id_to_item_stock_egresos_table)",
+      "Bash(php artisan make:migration create_egresos_table)",
+      "Bash(php artisan make:model Egress)",
+      "Bash(php artisan make:migration add_egress_id_to_item_stock_egresos_table)",
+      "Bash(php artisan tinker --execute=\"Schema::getColumnListing\\(''item_stock_egresos''\\);\")",
+      "Bash(php artisan db:table item_stock_egresos)",
+      "Bash(mysql -u root -e \"DESCRIBE item_stock_egresos\" ventas)",
+      "Bash(php artisan:*)"
     ]
   }
 }

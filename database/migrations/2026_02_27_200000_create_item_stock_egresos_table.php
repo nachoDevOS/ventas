@@ -11,18 +11,26 @@ return new class extends Migration
         Schema::create('item_stock_egresos', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('item_stock_id')->constrained('item_stocks');  // lote de origen
-            $table->foreignId('item_id')->constrained('items');               // item (para filtros)
+            $table->foreignId('egress_id')->nullable()->constrained('egresos');          // cabecera de egreso
+            $table->foreignId('itemStock_id')->constrained('item_stocks');               // lote de origen
+            $table->foreignId('itemStockFraction_id')->nullable()->constrained('item_stock_fractions');
 
-            $table->decimal('quantity', 10, 2);                    // unidades enteras egresadas
-            $table->decimal('quantity_fractions', 10, 2)->default(0); // fracciones egresadas (si aplica)
+            $table->decimal('pricePurchase', 10, 2)->nullable();
+            $table->foreignId('presentation_id')->nullable()->constrained('presentations');
+            $table->decimal('price', 10, 2)->nullable();
+            $table->decimal('quantity', 10, 2)->nullable();
+            $table->decimal('amount', 10, 2)->nullable();
 
-            $table->text('reason');                                // motivo del egreso
+            $table->smallInteger('status')->default(1);
 
-            $table->foreignId('register_user_id')->nullable()->constrained('users');
+            $table->timestamps();            
+            $table->foreignId('registerUser_id')->nullable()->constrained('users');
+            $table->string('registerRole')->nullable();
 
-            $table->timestamps();
             $table->softDeletes();
+            $table->foreignId('deleteUser_id')->nullable()->constrained('users');
+            $table->string('deleteRole')->nullable();
+            $table->text('deleteObservation')->nullable();
         });
     }
 
