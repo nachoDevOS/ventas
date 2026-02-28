@@ -226,39 +226,45 @@ class Controller extends BaseController
         foreach ($dispensions as $detail) {
             $itemStock = ItemStock::findOrFail($detail->itemStock_id);
 
-            if ($detail->dispensed == 'Entero') {
-                $itemStock->increment('stock', $detail->quantity);
-                $detail->delete();
-            } 
-            elseif ($detail->dispensed == 'Fraccionado' && $detail->itemStockFraction) {
-                // Si es fracción, eliminamos el registro de fracción (soft delete)
-                $detail->itemStockFraction->delete();
-
-                $itemStockUnit = SaleDetail::with(['sale'])
+            $itemStockUnit = SaleDetail::with(['sale'])
                     ->whereHas('sale', function ($q) {
                         $q->where('deleted_at', null);
                     })
                     ->where('itemStock_id',$detail->itemStock_id)
                     ->where('dispensed','Entero')
-                    ->where('deleted_at', null)
-                    ->get()
-                    ->sum('quantity');
-
-                $itemStockEgress = ItemStockEgress::where('itemStock_id',$detail->itemStock_id)
                     ->where('itemStockFraction_id', null)
                     ->where('deleted_at', null)
                     ->get()
                     ->sum('quantity');
-               
+
+            $itemStockEgress = ItemStockEgress::with(['egress'])
+                    ->whereHas('egress', function ($q) {
+                        $q->where('deleted_at', null);
+                    })
+                    ->where('itemStock_id',$detail->itemStock_id)
+                    ->where('itemStockFraction_id', null)
+                    ->where('deleted_at', null)
+                    ->get()
+                    ->sum('quantity');
+
+            $itemStock->update([
+                'stock' => $itemStock->quantity
+            ]);
+            $itemStock->decrement('stock', $itemStockUnit + $itemStockEgress);
 
 
-                $itemStock->update([
-                    'stock' => $itemStock->quantity
-                ]);
-                $itemStock->decrement('stock', ($itemStockUnit));
-                
-                $detail->delete();   
+
+
+            if ($detail->itemStockFraction_id != null) { //si es diferenete de null entonce es una dispensacion en fraccion
+                $detail->delete();
+            } 
+            else
+                // Si es fracción, eliminamos el registro de fracción (soft delete)
+                $detail->itemStockFraction->delete();  
             }
+
+            $detail->delete();   
+
         }
     }
 
