@@ -220,10 +220,26 @@ class Controller extends BaseController
         // =================================================================================
     }
 
+    // Auto-zero de stock: si tras descontar unidades enteras, el stock restante
+    // queda exactamente igual a las unidades ya consumidas por fracciones → ponerlo en 0.
+    // Se llama después de cada decrement() de unidades enteras (ventas y egresos).
+    protected function autoZeroStock($itemStock, $fractionQuantity)
+    {
+        if ($fractionQuantity <= 0) return;
+
+        $fracs_used       = $itemStock->itemStockFractions->sum('quantity');
+        $opened_units_now = $fracs_used / $fractionQuantity;
+
+        if ($itemStock->stock > 0 && $itemStock->stock == $opened_units_now) {
+            $itemStock->decrement('stock', $opened_units_now);
+        }
+    }
+
     // Para eliminacion y actualizacion o editar
     public function destroyDispensation($dispensions)
     {
         foreach ($dispensions as $detail) {
+            $detail->delete(); 
             $itemStock = ItemStock::findOrFail($detail->itemStock_id);
 
             $itemStockUnit = SaleDetail::with(['sale'])
@@ -257,7 +273,7 @@ class Controller extends BaseController
                 $detail->itemStockFraction->delete();  
             } 
 
-            $detail->delete();   
+              
         }
     }
 }
