@@ -13,7 +13,8 @@
       "Bash(php artisan cache:clear)",
       "Bash(grep -n \"listSales\\\\|sales.*list\\\\|admin/items.*sales\" /home/user/Escritorio/projects/ventas/app/Http/Controllers/*.php)",
       "Bash(php artisan make:migration add_stock_minimum_to_items_table --table=items)",
-      "Bash(php artisan migrate --path=database/migrations/2026_02_27_150000_add_stock_minimum_to_items_table.php)"
+      "Bash(php artisan migrate --path=database/migrations/2026_02_27_150000_add_stock_minimum_to_items_table.php)",
+      "Bash(php artisan migrate --path=database/migrations/2026_02_27_200000_create_item_stock_egresos_table.php)"
     ]
   }
 }

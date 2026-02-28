@@ -11,6 +11,7 @@ use App\Models\IncomeDetail;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\ItemStockFraction;
+use App\Models\ItemStockEgress;
 use Carbon\Carbon;
 
 class ItemController extends Controller
@@ -231,12 +232,13 @@ class ItemController extends Controller
         $paginate = request('paginate') ?? 10;
         $status = request('status') ?? null;
         $search = request('search') ?? null;
-        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions'])
+        $data = ItemStock::with(['item.presentation', 'item.fractionPresentation', 'itemStockFractions', 'itemStockEgresos.registerUser'])
             ->where('item_id', $id)
             ->where(function($query) use ($search){
                 $query->whereRaw($search ? "lote like '%$search%'" : 1);
             })
             ->where('deleted_at', null)
+            ->where(function($q) { $q->whereNull('type')->orWhere('type', '!=', 'Egreso'); })
             ->where(function($q) use ($status){
                 if($status == '1'){
                     $q->where('stock', '>', 0);
@@ -384,6 +386,111 @@ class ItemController extends Controller
         $item->save();
         return redirect()->route('voyager.items.show', ['id' => $id])
             ->with(['message' => 'Stock mínimo actualizado.', 'alert-type' => 'success']);
+    }
+
+    public function egressStock(Request $request, $id, $stockId)
+    {
+        $this->custom_authorize('edit_items');
+
+        $item      = Item::findOrFail($id);
+        $itemStock = ItemStock::with(['itemStockFractions'])
+            ->where('id', $stockId)
+            ->where('item_id', $id)
+            ->where('deleted_at', null)
+            ->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            $reason = trim($request->reason ?? '');
+
+            if ($item->fraction && $item->fractionQuantity > 0) {
+                $wholeUnits     = max(0, intval($request->quantity ?? 0));
+                $extraFractions = max(0, intval($request->extraFractions ?? 0));
+                $totalToRemove  = ($wholeUnits * $item->fractionQuantity) + $extraFractions;
+
+                if ($totalToRemove <= 0) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['message' => 'Debe ingresar al menos una unidad o fracción.', 'alert-type' => 'error']);
+                }
+
+                // Stock fraccionario disponible real del lote
+                $usedFractions      = $itemStock->itemStockFractions->sum('quantity');
+                $availableFractions = ($itemStock->stock * $item->fractionQuantity) - $usedFractions;
+
+                if ($totalToRemove > $availableFractions) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['message' => 'La cantidad supera el stock disponible del lote (' . $availableFractions . ' ' . ($item->fractionPresentation->name ?? 'fracciones') . ').', 'alert-type' => 'error']);
+                }
+
+                // Unidades enteras a descontar y fracciones sobrantes
+                $unitsToDeduct      = (int) floor($totalToRemove / $item->fractionQuantity);
+                $fractionsRemainder = (int) ($totalToRemove % $item->fractionQuantity);
+
+                // 1. Reducir stock del lote original
+                $itemStock->stock -= $unitsToDeduct;
+                $itemStock->save();
+
+                // 2. Registrar fracción sobrante como usada
+                if ($fractionsRemainder > 0) {
+                    ItemStockFraction::create([
+                        'itemStock_id' => $itemStock->id,
+                        'quantity'     => $fractionsRemainder,
+                        'price'        => 0,
+                        'amount'       => 0,
+                    ]);
+                }
+
+                // 3. Registrar egreso en tabla dedicada
+                ItemStockEgress::create([
+                    'item_stock_id'      => $itemStock->id,
+                    'item_id'            => $id,
+                    'quantity'           => $unitsToDeduct,
+                    'quantity_fractions' => $fractionsRemainder,
+                    'reason'             => $reason,
+                    'register_user_id'   => auth()->id(),
+                ]);
+
+            } else {
+                $quantity = max(0, intval($request->quantity ?? 0));
+
+                if ($quantity <= 0) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['message' => 'Debe ingresar una cantidad mayor a 0.', 'alert-type' => 'error']);
+                }
+
+                if ($quantity > $itemStock->stock) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['message' => 'La cantidad supera el stock disponible del lote (' . $itemStock->stock . ' unidades).', 'alert-type' => 'error']);
+                }
+
+                // 1. Reducir stock del lote original
+                $itemStock->stock -= $quantity;
+                $itemStock->save();
+
+                // 2. Registrar egreso en tabla dedicada
+                ItemStockEgress::create([
+                    'item_stock_id'      => $itemStock->id,
+                    'item_id'            => $id,
+                    'quantity'           => $quantity,
+                    'quantity_fractions' => 0,
+                    'reason'             => $reason,
+                    'register_user_id'   => auth()->id(),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Egreso registrado exitosamente.', 'alert-type' => 'success']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('voyager.items.show', ['id' => $id])
+                ->with(['message' => 'Error al registrar egreso: ' . $e->getMessage(), 'alert-type' => 'error']);
+        }
     }
 
     public function destroyStock($id, $stock)

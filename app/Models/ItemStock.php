@@ -44,6 +44,11 @@ class ItemStock extends Model
         return $this->hasMany(ItemStockFraction::class, 'itemStock_id');
     }
 
+    public function itemStockEgresos()
+    {
+        return $this->hasMany(ItemStockEgress::class, 'item_stock_id');
+    }
+
 
     public function item()
     {

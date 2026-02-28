@@ -54,6 +54,9 @@
                             $totalFracSale = $value->dispensedPrice * $value->dispensedQuantity;
                             $marginFrac    = (($totalFracSale - $value->pricePurchase) / $value->pricePurchase) * 100;
                         }
+
+                        $egresos      = $value->itemStockEgresos;
+                        $egresosCount = $egresos->count();
                     @endphp
                     <tr>
                         {{-- N° --}}
@@ -68,11 +71,22 @@
                                 @else
                                     <i class="voyager-bag"></i> Ingreso por Compra
                                 @endif
-                            </small><br>
+                            </small>
+                            <br>
                             <small style="color: #aaa; font-size: 10px;">
                                 <i class="fa-solid fa-calendar-plus"></i>
                                 {{ \Carbon\Carbon::parse($value->created_at)->format('d/m/Y H:i') }}
                             </small>
+                            @if ($egresosCount > 0)
+                                <br>
+                                <button type="button"
+                                        class="btn btn-xs btn-default btn-toggle-egresos"
+                                        data-target="egresos-row-{{ $value->id }}"
+                                        style="margin-top: 4px; font-size: 10px; color: #c0392b; border-color: #e0b0b0;">
+                                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                    {{ $egresosCount }} egreso(s)
+                                </button>
+                            @endif
                         </td>
 
                         {{-- Expiración --}}
@@ -215,7 +229,7 @@
                                     </button><br>
                                 @endif
                                 {{-- Eliminar lote --}}
-                                @if ($value->quantity == $value->stock && $value->itemStockFractions->count() == 0)
+                                @if ($value->quantity == $value->stock && $value->itemStockFractions->count() == 0 && $egresosCount == 0)
                                     <a href="#"
                                        onclick="deleteItem('{{ route('items-stock.destroy', ['id' => $value->item_id, 'stock' => $value->id]) }}')"
                                        title="Eliminar lote" data-toggle="modal" data-target="#modal-delete"
@@ -224,7 +238,7 @@
                                     </a>
                                 @else
                                     <span data-toggle="tooltip"
-                                          title="No se puede eliminar porque ya tiene ventas o dispensaciones asociadas.">
+                                          title="No se puede eliminar porque ya tiene ventas, dispensaciones o egresos asociados.">
                                         <button class="btn btn-sm btn-danger" disabled>
                                             <i class="voyager-trash"></i>
                                         </button>
@@ -233,6 +247,57 @@
                             @endif
                         </td>
                     </tr>
+
+                    {{-- Fila de historial de egresos (oculta por defecto) --}}
+                    @if ($egresosCount > 0)
+                        <tr id="egresos-row-{{ $value->id }}" style="display: none; background: #fff9f9;">
+                            <td colspan="9" style="padding: 0; border-top: none;">
+                                <div style="padding: 8px 16px 10px; border-left: 3px solid #e74c3c;">
+                                    <div style="font-size: 11px; font-weight: 700; color: #c0392b; margin-bottom: 6px;">
+                                        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                        Historial de Egresos — Lote: {{ $value->lote ?? 'S/N' }}
+                                    </div>
+                                    <table class="table table-condensed" style="margin: 0; font-size: 11px; background: transparent;">
+                                        <thead>
+                                            <tr style="background: #fdecea;">
+                                                <th style="width: 14%; padding: 4px 8px;">Fecha</th>
+                                                <th style="width: 14%; padding: 4px 8px; text-align: right;">Cant. Unidades</th>
+                                                <th style="width: 14%; padding: 4px 8px; text-align: right;">Cant. Fracciones</th>
+                                                <th style="padding: 4px 8px;">Razón / Motivo</th>
+                                                <th style="width: 14%; padding: 4px 8px;">Registrado por</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($egresos as $egreso)
+                                                <tr>
+                                                    <td style="padding: 3px 8px; color: #888;">
+                                                        {{ \Carbon\Carbon::parse($egreso->created_at)->format('d/m/Y H:i') }}
+                                                    </td>
+                                                    <td style="padding: 3px 8px; text-align: right; font-weight: 700; color: #c0392b;">
+                                                        {{ number_format($egreso->quantity, 0) }}
+                                                        {{ $item->presentation->name ?? 'Unid.' }}
+                                                    </td>
+                                                    <td style="padding: 3px 8px; text-align: right; color: #888;">
+                                                        @if ($egreso->quantity_fractions > 0)
+                                                            {{ number_format($egreso->quantity_fractions, 0) }}
+                                                            {{ $item->fractionPresentation->name ?? 'Frac.' }}
+                                                        @else
+                                                            <span style="font-style: italic;">—</span>
+                                                        @endif
+                                                    </td>
+                                                    <td style="padding: 3px 8px;">{{ $egreso->reason }}</td>
+                                                    <td style="padding: 3px 8px; color: #888;">
+                                                        {{ $egreso->registerUser->name ?? '—' }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
+
                     @php $i++; @endphp
                 @empty
                     <tr>
@@ -275,5 +340,17 @@
                 list(page);
             }
         });
+    });
+
+    $(document).on('click', '.btn-toggle-egresos', function () {
+        var targetId = $(this).data('target');
+        var $row = $('#' + targetId);
+        if ($row.is(':visible')) {
+            $row.hide();
+            $(this).find('i').removeClass('fa-chevron-up').addClass('fa-arrow-up-from-bracket');
+        } else {
+            $row.show();
+            $(this).find('i').removeClass('fa-arrow-up-from-bracket').addClass('fa-chevron-up');
+        }
     });
 </script>
