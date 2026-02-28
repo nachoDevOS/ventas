@@ -112,6 +112,29 @@
                             border-radius: 8px; padding: 11px 15px; margin-bottom: 12px;
                         }
                         .confirm-check-box .checkbox-inline { font-size: 13px; color: #555; font-weight: 600; }
+
+                        /* Sale type selector */
+                        .sale-type-group { display: flex; gap: 5px; margin-top: 4px; }
+                        .sale-type-card {
+                            flex: 1; border: 1px solid #ddd; border-radius: 6px;
+                            padding: 8px 6px; cursor: pointer; text-align: center;
+                            display: flex; flex-direction: column; align-items: center; gap: 3px;
+                            transition: border-color .15s, background .15s, box-shadow .15s;
+                            background: #fff;
+                        }
+                        .sale-type-card:hover { border-color: #3498db; background: #f0f7ff; }
+                        .sale-type-card.active { border-color: #3498db; background: #eaf4fd; box-shadow: 0 1px 4px rgba(52,152,219,.2); }
+                        .st-icon { font-size: 15px; color: #bdc3c7; transition: color .15s; }
+                        .st-label { font-size: 10px; color: #7f8c8d; font-weight: 600; transition: color .15s; }
+                        .sale-type-card.active .st-icon { color: #3498db; }
+                        .sale-type-card.active .st-label { color: #2980b9; font-weight: 700; }
+
+                        /* Proforma notice */
+                        #proforma-notice {
+                            background: #eaf4fd; border: 1px solid #aed6f1; border-radius: 8px;
+                            padding: 10px 14px; color: #2980b9; font-size: 12px; font-weight: 600;
+                            margin-top: 6px;
+                        }
                     </style>
                     <div class="panel panel-bordered">
                         <div class="panel-heading">
@@ -132,6 +155,26 @@
                                     </div>
                                 @endif
 
+                                @if(!isset($sale))
+                                <div class="form-group col-md-12">
+                                    <label><i class="fa-solid fa-tags" style="color:#3498db;"></i> Tipo de Comprobante</label>
+                                    <div class="sale-type-group">
+                                        <div class="sale-type-card active" data-value="Venta al Contado" onclick="selectSaleType('Venta al Contado', this)">
+                                            <i class="fa-solid fa-money-bill-wave st-icon"></i>
+                                            <span class="st-label">Venta al Contado</span>
+                                        </div>
+                                        <div class="sale-type-card" data-value="Venta al Credito" onclick="selectSaleType('Venta al Credito', this)">
+                                            <i class="fa-solid fa-clock st-icon"></i>
+                                            <span class="st-label">Venta al Crédito</span>
+                                        </div>
+                                        <div class="sale-type-card" data-value="Proforma" onclick="selectSaleType('Proforma', this)">
+                                            <i class="fa-solid fa-file-invoice st-icon"></i>
+                                            <span class="st-label">Proforma</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
                                 <input type="hidden" name="typeSale" id="typeSale" value="{{ isset($sale) ? $sale->typeSale : 'Venta al Contado' }}">
 
                                 {{-- Hidden select keeps form submission & JS compatibility --}}
@@ -142,7 +185,7 @@
                                     <option value="Efectivo y Qr" @if(isset($sale) && ($sale->payment_type == 'Efectivo y Qr' || $sale->payment_type == 'Ambos')) selected @endif>Efectivo y Qr</option>
                                 </select>
 
-                                <div class="form-group col-md-12">
+                                <div class="form-group col-md-12" id="payment-method-fg">
                                     <label><i class="fa-solid fa-credit-card" style="color:#3498db;"></i> Método de pago</label>
                                     <div class="payment-method-group">
                                         <div class="payment-method-card @if(isset($sale) && $sale->payment_type == 'Efectivo') active @endif"
@@ -160,6 +203,9 @@
                                             <i class="fa-solid fa-layer-group pm-icon"></i>
                                             <span class="pm-label">Efectivo y QR</span>
                                         </div>
+                                    </div>
+                                    <div id="proforma-notice" style="display:none;">
+                                        <i class="fa-solid fa-file-invoice"></i> Proforma: se registran los ítems sin descontar stock ni registrar pago.
                                     </div>
                                 </div>
 
@@ -1102,6 +1148,13 @@
         });
 
         // Seleccionar método de pago desde las tarjetas visuales
+        function selectSaleType(value, card) {
+            $('.sale-type-card').removeClass('active');
+            $(card).addClass('active');
+            $('#typeSale').val(value);
+            updatePaymentLogic();
+        }
+
         function selectPaymentMethod(value, card) {
             $('.payment-method-card').removeClass('active');
             $(card).addClass('active');
@@ -1123,10 +1176,16 @@
             $('.btn-submit').prop('disabled', true);
 
             if (typeSale === 'Proforma') {
-                // paymentSelect.prop('required', false);
+                $('#payment-method-fg .payment-method-group').hide();
+                $('#proforma-notice').show();
                 $('.btn-submit').prop('disabled', false);
-            } 
-            else if (typeSale === 'Venta al Contado') {
+            }
+            else {
+                $('#payment-method-fg .payment-method-group').show();
+                $('#proforma-notice').hide();
+            }
+
+            if (typeSale === 'Venta al Contado') {
                 // $('#change-message-error').show(); // Show "monto faltante" by default
 
                 switch (paymentType) {

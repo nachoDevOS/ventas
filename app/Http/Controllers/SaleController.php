@@ -70,6 +70,8 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $this->custom_authorize('add_sales');
+        $isProforma = $request->typeSale === 'Proforma';
+
         if(!$request->products)
         {
             return redirect()
@@ -79,9 +81,11 @@ class SaleController extends Controller
 
         $amountItems =0;
         if ($request->products) {
-            $val = $this->stockValidate($request);
-            if($val){
-                return $val;
+            if (!$isProforma) {
+                $val = $this->stockValidate($request);
+                if($val){
+                    return $val;
+                }
             }
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
@@ -114,7 +118,7 @@ class SaleController extends Controller
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
 
-        if(($amount_cash + $amount_qr) < $amountTotal)
+        if(!$isProforma && ($amount_cash + $amount_qr) < $amountTotal)
         {
             return redirect()
                 ->route('sales.create')
@@ -131,38 +135,40 @@ class SaleController extends Controller
         
         DB::beginTransaction();
         try {
-            $transaction = Transaction::create([
-                'status' => 'Completado',
-            ]);
             $sale = Sale::create([
                 'person_id' => $request->person_id,
                 'cashier_id' => $cashier->id,
                 'invoiceNumber' => $this->generarNumeroFactura($request->typeSale),
                 'typeSale' => $request->typeSale,
-                'amountReceived' => $request->amountReceived,
-                'amountChange' => $request->payment_type == 'Efectivo'? $request->amountReceived-$amountTotal : 0,
+                'amountReceived' => $isProforma ? 0 : $request->amountReceived,
+                'amountChange' => (!$isProforma && $request->payment_type == 'Efectivo') ? $request->amountReceived-$amountTotal : 0,
                 'amount' => $amountTotal ?? 0,
                 'general_discount' => $general_discount,
                 'observation' => $request->observation,
                 'dateSale' => Carbon::now(),
-                'status' => $request->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash+$amount_qr) >= $amountTotal?'Pagado':'Pendiente'),
+                'status' => $isProforma ? 'Pendiente' : ($request->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash+$amount_qr) >= $amountTotal?'Pagado':'Pendiente')),
             ]);
 
-            if ($request->payment_type == 'Efectivo' || $request->payment_type == 'Efectivo y Qr') {
-                SaleTransaction::create([
-                    'sale_id' => $sale->id,
-                    'transaction_id' => $transaction->id,
-                    'amount' => $amountTotal - $amount_qr,
-                    'paymentType' => 'Efectivo',
+            if (!$isProforma) {
+                $transaction = Transaction::create([
+                    'status' => 'Completado',
                 ]);
-            }
-            if ($request->payment_type == 'Qr' || $request->payment_type == 'Efectivo y Qr') {
-                SaleTransaction::create([
-                    'sale_id' => $sale->id,
-                    'transaction_id' => $transaction->id,
-                    'amount' => $amount_qr,
-                    'paymentType' => 'Qr',
-                ]);
+                if ($request->payment_type == 'Efectivo' || $request->payment_type == 'Efectivo y Qr') {
+                    SaleTransaction::create([
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amountTotal - $amount_qr,
+                        'paymentType' => 'Efectivo',
+                    ]);
+                }
+                if ($request->payment_type == 'Qr' || $request->payment_type == 'Efectivo y Qr') {
+                    SaleTransaction::create([
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amount_qr,
+                        'paymentType' => 'Qr',
+                    ]);
+                }
             }
 
             // =================================================================================
@@ -201,46 +207,64 @@ class SaleController extends Controller
                         'amount' => $amount_unit,
                     ]);
 
-                    $itemStock->decrement('stock', $quantity_unit);
-                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    if (!$isProforma) {
+                        $itemStock->decrement('stock', $quantity_unit);
+                        $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    }
                 }
 
                 // Lógica para venta de fracciones
                 if ($quantity_fraction > 0) {
-                    $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
-                    $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
-                    $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-
-                    if ($opened_units_after > $itemStock->stock) {
-                        DB::rollBack();
-                        return redirect()->route('sales.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error'])->withInput();
-                    }
-
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
                     $bruto_fraction = $value['price_fraction'] * $quantity_fraction;
                     if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
                         $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
                     }
                     $amount_fraction = $bruto_fraction - $discount_fraction;
-                    $itemStockFraction = ItemStockFraction::create([
-                        'itemStock_id' => $itemStock->id,
-                        'quantity' => $quantity_fraction,
-                        'price' => $value['price_fraction'],
-                        'amount' => $amount_fraction,
-                    ]);
-                    SaleDetail::create([
-                        'sale_id' => $sale->id,
-                        'itemStock_id' => $itemStock->id,
-                        'itemStockFraction_id' => $itemStockFraction->id,
-                        'dispensed' => 'Fraccionado',
-                        'presentation_id' => $itemStock->item->fractionPresentation_id,
-                        'pricePurchase' => $itemStock->pricePurchase,
-                        'price' => $value['price_fraction'],
-                        'quantity' => $quantity_fraction,
-                        'discount' => $discount_fraction,
-                        'amount' => $amount_fraction,
-                    ]);
-                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+
+                    if ($isProforma) {
+                        // Proforma: solo registrar el detalle, sin tocar stock ni crear fracción
+                        SaleDetail::create([
+                            'sale_id' => $sale->id,
+                            'itemStock_id' => $itemStock->id,
+                            'dispensed' => 'Fraccionado',
+                            'presentation_id' => $itemStock->item->fractionPresentation_id,
+                            'pricePurchase' => $itemStock->pricePurchase,
+                            'price' => $value['price_fraction'],
+                            'quantity' => $quantity_fraction,
+                            'discount' => $discount_fraction,
+                            'amount' => $amount_fraction,
+                        ]);
+                    } else {
+                        $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
+                        $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
+                        $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
+
+                        if ($opened_units_after > $itemStock->stock) {
+                            DB::rollBack();
+                            return redirect()->route('sales.index')->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error'])->withInput();
+                        }
+
+                        $itemStockFraction = ItemStockFraction::create([
+                            'itemStock_id' => $itemStock->id,
+                            'quantity' => $quantity_fraction,
+                            'price' => $value['price_fraction'],
+                            'amount' => $amount_fraction,
+                        ]);
+                        SaleDetail::create([
+                            'sale_id' => $sale->id,
+                            'itemStock_id' => $itemStock->id,
+                            'itemStockFraction_id' => $itemStockFraction->id,
+                            'dispensed' => 'Fraccionado',
+                            'presentation_id' => $itemStock->item->fractionPresentation_id,
+                            'pricePurchase' => $itemStock->pricePurchase,
+                            'price' => $value['price_fraction'],
+                            'quantity' => $quantity_fraction,
+                            'discount' => $discount_fraction,
+                            'amount' => $amount_fraction,
+                        ]);
+                        $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    }
                 }
             }
 
@@ -313,6 +337,8 @@ class SaleController extends Controller
     public function update(Request $request, Sale $sale)
     {
         $this->custom_authorize('edit_sales');
+        $isProforma = $sale->typeSale === 'Proforma';
+
         if(!$request->products)
         {
             return redirect()
@@ -322,11 +348,13 @@ class SaleController extends Controller
 
         $amountItems =0;
         if ($request->products) {
-            $sale->load('saleDetails');
-            $sale->setRelation('dispensions', $sale->saleDetails);
-            $val = $this->stockValidate($request, $sale);
-            if($val){
-                return $val;
+            if (!$isProforma) {
+                $sale->load('saleDetails');
+                $sale->setRelation('dispensions', $sale->saleDetails);
+                $val = $this->stockValidate($request, $sale);
+                if($val){
+                    return $val;
+                }
             }
             foreach ($request->products as $key => $value){
                 if($value['quantity_unit'] > 0 && $value['price_unit'] > 0){
@@ -359,7 +387,7 @@ class SaleController extends Controller
         $amount_cash = $request->amount_cash ? $request->amount_cash : 0;
         $amount_qr = $request->amount_qr ? $request->amount_qr : 0;
 
-        if (($amount_cash + $amount_qr) < $amountTotal) {
+        if (!$isProforma && ($amount_cash + $amount_qr) < $amountTotal) {
             return redirect()
                 ->route('sales.edit', ['sale' => $sale->id])
                 ->with(['message' => 'Monto Incorrecto.', 'alert-type' => 'error']);
@@ -379,34 +407,39 @@ class SaleController extends Controller
        
         DB::beginTransaction();
         try {
-            // Eliminar transacciones de pago antiguas
-            foreach ($sale->saleTransactions as $saleTransaction) {
-                if ($saleTransaction->transaction) {
-                    $saleTransaction->transaction->delete();
+            if (!$isProforma) {
+                // Eliminar transacciones de pago antiguas
+                foreach ($sale->saleTransactions as $saleTransaction) {
+                    if ($saleTransaction->transaction) {
+                        $saleTransaction->transaction->delete();
+                    }
+                    $saleTransaction->delete();
                 }
-                $saleTransaction->delete();
             }
 
             $sale = Sale::with(['saleTransactions', 'saleDetails'])
                 ->where('id', $sale->id)
                 ->first();
 
-
             // 1. Restaurar stock y eliminar detalles existentes
-            // Es más seguro eliminar y recrear los detalles para manejar correctamente 
-            // los cambios entre unidades y fracciones.
-            $this->destroyDispensation($sale->saleDetails);
+            if ($isProforma) {
+                // Proforma: solo eliminar detalles sin restaurar stock
+                foreach ($sale->saleDetails as $detail) {
+                    $detail->delete();
+                }
+            } else {
+                $this->destroyDispensation($sale->saleDetails);
+            }
 
 
             $sale->update([
                 'person_id' => $request->person_id,
-                'amountReceived' => $request->amountReceived,
-                'amountChange' => $request->payment_type == 'Efectivo' ? $request->amountReceived - $amountTotal : 0, // Ajustar si es necesario
-
+                'amountReceived' => $isProforma ? 0 : $request->amountReceived,
+                'amountChange' => (!$isProforma && $request->payment_type == 'Efectivo') ? $request->amountReceived - $amountTotal : 0,
                 'amount' => $amountTotal,
                 'general_discount' => $general_discount,
                 'observation' => $request->observation,
-                'status' => $request->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash + $amount_qr) >= $amountTotal ? 'Pagado' : 'Pendiente'),
+                'status' => $isProforma ? 'Pendiente' : ($sale->typeSale == 'Venta al Contado' ? 'Pagado' : (($amount_cash + $amount_qr) >= $amountTotal ? 'Pagado' : 'Pendiente')),
             ]);
 
             // 2. Crear nuevos detalles (Lógica idéntica a store)
@@ -443,73 +476,92 @@ class SaleController extends Controller
                         'amount' => $amount_unit,
                     ]);
 
-                    $itemStock->decrement('stock', $quantity_unit);
-                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    if (!$isProforma) {
+                        $itemStock->decrement('stock', $quantity_unit);
+                        $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    }
                 }
 
                 // Venta de Fracciones
                 if ($quantity_fraction > 0) {
-                    $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
-                    $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
-                    $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
-
-                    if ($opened_units_after > $itemStock->stock) {
-                        DB::rollBack();
-                        return redirect()
-                                ->route('sales.index')
-                                ->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
-                    }
                     $discount_fraction = isset($value['discount_fraction']) ? floatval($value['discount_fraction']) : 0;
                     $bruto_fraction = $value['price_fraction'] * $quantity_fraction;
                     if ($bruto_fraction > 0 && $discount_fraction >= $bruto_fraction) {
                         $discount_fraction = max(0, round($bruto_fraction - 0.01, 2));
                     }
                     $amount_fraction = $bruto_fraction - $discount_fraction;
-                    $itemStockFraction = ItemStockFraction::create([
-                        'itemStock_id' => $itemStock->id,
-                        'quantity' => $quantity_fraction,
-                        'price' => $value['price_fraction'],
-                        'amount' => $amount_fraction,
-                    ]);
 
-                    SaleDetail::create([
-                        'sale_id' => $sale->id,
-                        'itemStock_id' => $itemStock->id,
-                        'itemStockFraction_id' => $itemStockFraction->id,
-                        'dispensed' => 'Fraccionado',
-                        'presentation_id' => $itemStock->item->fractionPresentation_id,
-                        'pricePurchase' => $itemStock->pricePurchase,
-                        'price' => $value['price_fraction'],
-                        'quantity' => $quantity_fraction,
-                        'discount' => $discount_fraction,
-                        'amount' => $amount_fraction,
-                    ]);
-                    $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    if ($isProforma) {
+                        SaleDetail::create([
+                            'sale_id' => $sale->id,
+                            'itemStock_id' => $itemStock->id,
+                            'dispensed' => 'Fraccionado',
+                            'presentation_id' => $itemStock->item->fractionPresentation_id,
+                            'pricePurchase' => $itemStock->pricePurchase,
+                            'price' => $value['price_fraction'],
+                            'quantity' => $quantity_fraction,
+                            'discount' => $discount_fraction,
+                            'amount' => $amount_fraction,
+                        ]);
+                    } else {
+                        $fractions_sold_before = $itemStock->itemStockFractions()->where('deleted_at', null)->sum('quantity');
+                        $fractions_sold_after  = $fractions_sold_before + $quantity_fraction;
+                        $opened_units_after    = $fractions_sold_after / ($itemStock->dispensedQuantity ?: 1);
+
+                        if ($opened_units_after > $itemStock->stock) {
+                            DB::rollBack();
+                            return redirect()
+                                    ->route('sales.index')
+                                    ->with(['message' => 'Ocurrió un error.', 'alert-type' => 'error']);
+                        }
+                        $itemStockFraction = ItemStockFraction::create([
+                            'itemStock_id' => $itemStock->id,
+                            'quantity' => $quantity_fraction,
+                            'price' => $value['price_fraction'],
+                            'amount' => $amount_fraction,
+                        ]);
+
+                        SaleDetail::create([
+                            'sale_id' => $sale->id,
+                            'itemStock_id' => $itemStock->id,
+                            'itemStockFraction_id' => $itemStockFraction->id,
+                            'dispensed' => 'Fraccionado',
+                            'presentation_id' => $itemStock->item->fractionPresentation_id,
+                            'pricePurchase' => $itemStock->pricePurchase,
+                            'price' => $value['price_fraction'],
+                            'quantity' => $quantity_fraction,
+                            'discount' => $discount_fraction,
+                            'amount' => $amount_fraction,
+                        ]);
+                        $this->autoZeroStock($itemStock, $itemStock->dispensedQuantity);
+                    }
                 }
 
-                
+
             }
 
-            // Crear nuevas transacciones de pago
-            $transaction = Transaction::create([
-                'status' => 'Completado',
-            ]);
+            if (!$isProforma) {
+                // Crear nuevas transacciones de pago
+                $transaction = Transaction::create([
+                    'status' => 'Completado',
+                ]);
 
-            if ($request->payment_type == 'Efectivo' || $request->payment_type == 'Efectivo y Qr') {
-                SaleTransaction::create([
-                    'sale_id' => $sale->id,
-                    'transaction_id' => $transaction->id,
-                    'amount' => $amountTotal - $amount_qr,
-                    'paymentType' => 'Efectivo',
-                ]);
-            }
-            if ($request->payment_type == 'Qr' || $request->payment_type == 'Efectivo y Qr') {
-                SaleTransaction::create([
-                    'sale_id' => $sale->id,
-                    'transaction_id' => $transaction->id,
-                    'amount' => $amount_qr,
-                    'paymentType' => 'Qr',
-                ]);
+                if ($request->payment_type == 'Efectivo' || $request->payment_type == 'Efectivo y Qr') {
+                    SaleTransaction::create([
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amountTotal - $amount_qr,
+                        'paymentType' => 'Efectivo',
+                    ]);
+                }
+                if ($request->payment_type == 'Qr' || $request->payment_type == 'Efectivo y Qr') {
+                    SaleTransaction::create([
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amount_qr,
+                        'paymentType' => 'Qr',
+                    ]);
+                }
             }
             DB::commit();
             return redirect()->route('sales.index')->with(['message' => 'Venta actualizada exitosamente.', 'alert-type' => 'success']);
@@ -570,8 +622,13 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
-
-            $this->destroyDispensation($sale->saleDetails);
+            if ($sale->typeSale === 'Proforma') {
+                foreach ($sale->saleDetails as $detail) {
+                    $detail->delete();
+                }
+            } else {
+                $this->destroyDispensation($sale->saleDetails);
+            }
 
             $sale->delete();
             DB::commit();

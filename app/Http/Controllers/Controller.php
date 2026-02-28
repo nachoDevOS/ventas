@@ -250,7 +250,7 @@ class Controller extends BaseController
 
             $itemStockUnit = SaleDetail::with(['sale'])
                     ->whereHas('sale', function ($q) {
-                        $q->where('deleted_at', null);
+                        $q->where('deleted_at', null)->where('typeSale', '!=', 'Proforma');
                     })
                     ->where('itemStock_id',$detail->itemStock_id)
                     ->where('dispensed','Entero')
