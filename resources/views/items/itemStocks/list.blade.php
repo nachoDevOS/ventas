@@ -198,10 +198,27 @@
                             @if ($value->deleted_at)
                                 <span style="color: #e74c3c; font-size: 11px;">Eliminado</span>
                             @else
+                                {{-- Egreso de stock --}}
+                                @if ($total_stock_in_fractions > 0 && auth()->user()->hasPermission('edit_items'))
+                                    <button type="button"
+                                            class="btn btn-sm btn-warning btn-egress-lot"
+                                            title="Registrar egreso"
+                                            data-item-id="{{ $value->item_id }}"
+                                            data-stock-id="{{ $value->id }}"
+                                            data-lote="{{ $value->lote ?? 'S/N' }}"
+                                            data-full-units="{{ $stock_full_units }}"
+                                            data-extra-fracs="{{ $stock_fractions }}"
+                                            data-total-fracs="{{ $total_stock_in_fractions }}"
+                                            data-stock="{{ $value->stock }}"
+                                            style="margin-bottom: 4px;">
+                                        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                    </button><br>
+                                @endif
+                                {{-- Eliminar lote --}}
                                 @if ($value->quantity == $value->stock && $value->itemStockFractions->count() == 0)
                                     <a href="#"
                                        onclick="deleteItem('{{ route('items-stock.destroy', ['id' => $value->item_id, 'stock' => $value->id]) }}')"
-                                       title="Eliminar" data-toggle="modal" data-target="#modal-delete"
+                                       title="Eliminar lote" data-toggle="modal" data-target="#modal-delete"
                                        class="btn btn-sm btn-danger">
                                         <i class="voyager-trash"></i>
                                     </a>

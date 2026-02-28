@@ -507,6 +507,113 @@
     </div>
 </form>
 
+{{-- ══════════════════════════════════════════════════
+     Modal Egreso de Stock (se rellena vía JS por fila)
+══════════════════════════════════════════════════ --}}
+<form id="form-egress-stock" action="" method="POST">
+    @csrf
+    <div class="modal fade" data-backdrop="static" id="modal-egress-stock" role="dialog">
+        <div class="modal-dialog modal-lg modal-warning">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#c0392b; border-radius:3px 3px 0 0;">
+                    <button type="button" class="close" data-dismiss="modal"><span style="color:#fff;">&times;</span></button>
+                    <h4 class="modal-title" style="color:#fff;">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Egreso de Stock
+                    </h4>
+                </div>
+                <div class="modal-body" style="background:#f5f5f5;">
+
+                    {{-- Info del lote --}}
+                    <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:5px;
+                                padding:12px 15px; margin-bottom:15px;">
+                        <div style="font-size:10px; color:#856404; text-transform:uppercase;
+                                    font-weight:700; letter-spacing:0.5px; margin-bottom:4px;">
+                            <i class="fa-solid fa-layer-group"></i> Lote seleccionado
+                        </div>
+                        <div style="font-size:15px; font-weight:700; color:#2c3e50;" id="egress-lote-name">—</div>
+                        <div style="font-size:12px; color:#666; margin-top:4px;">
+                            <i class="fa-solid fa-box" style="color:#27ae60;"></i>
+                            Disponible: <b id="egress-available-text" style="color:#27ae60;">—</b>
+                        </div>
+                    </div>
+
+                    {{-- Cantidad a egresar --}}
+                    <div class="panel panel-default" style="box-shadow:none; border:1px solid #ddd;">
+                        <div class="panel-body">
+                            <h5 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:8px;
+                                       margin-bottom:12px; font-weight:bold; color:#555;">
+                                <i class="fa-solid fa-minus"></i> Cantidad a Egresar
+                            </h5>
+                            <div class="row">
+                                @if ($item->fraction)
+                                <div class="form-group col-md-3">
+                                    <label>{{ strtoupper($item->presentation->name ?? 'Unidades') }}</label>
+                                    <input style="text-align:right" type="number" id="egress-quantity"
+                                           name="quantity" step="1" min="0" value="0"
+                                           class="form-control" placeholder="0"
+                                           oninput="updateEgressSummary()">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>{{ strtoupper($item->fractionPresentation->name ?? 'Fracciones') }} adicionales</label>
+                                    <input style="text-align:right" type="number" id="egress-extra-fractions"
+                                           name="extraFractions" step="1" min="0" value="0"
+                                           class="form-control" placeholder="0"
+                                           oninput="updateEgressSummary()">
+                                </div>
+                                @else
+                                <div class="form-group col-md-4">
+                                    <label>Cantidad</label>
+                                    <input style="text-align:right" type="number" id="egress-quantity"
+                                           name="quantity" step="1" min="1" value=""
+                                           class="form-control" placeholder="0"
+                                           oninput="updateEgressSummary()">
+                                </div>
+                                @endif
+                                <div class="col-md-4" style="padding-top:26px;">
+                                    <div style="background:#fef2f2; border:1px solid #fca5a5;
+                                                border-radius:5px; padding:6px 10px; font-size:12px;">
+                                        Total a sacar: <b id="egress-summary-text" style="color:#c0392b;">—</b>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Razón del egreso --}}
+                    <div class="panel panel-default" style="box-shadow:none; border:1px solid #e74c3c;">
+                        <div class="panel-heading" style="background:#fdf2f2; color:#922b21;
+                                                          padding:10px 15px; border-bottom:1px solid #f1948a;">
+                            <h3 class="panel-title" style="font-size:14px; font-weight:bold;">
+                                <i class="fa-solid fa-clipboard-question"></i> Razón del Egreso
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>Motivo <span class="text-danger">*</span></label>
+                                <textarea id="egress-reason" name="reason" class="form-control" rows="2" required
+                                          placeholder="Ej: Producto vencido, daño físico, ajuste de inventario, robo..."></textarea>
+                                <small class="text-muted">Se registrará en la observación del lote para trazabilidad.</small>
+                            </div>
+                            <div class="checkbox" style="margin:0;">
+                                <label>
+                                    <input type="checkbox" id="egress-confirm"> Confirmar egreso de stock
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="egress-submit-btn" class="btn btn-danger" disabled>
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Registrar Egreso
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
 @include('partials.modal-delete')
 @stop
 
@@ -694,5 +801,121 @@
             });
         });
         @endif
+
+        // ── Egreso de Stock ──────────────────────────────────────────────────
+        @php
+            $egressIsFrac  = $item->fraction ? 'true' : 'false';
+            $egressFracQty = $item->fractionQuantity ?? 1;
+            $egressUnit    = strtoupper($item->presentation->name ?? 'Unid.');
+            $egressFrac    = $item->fraction ? strtoupper($item->fractionPresentation->name ?? 'Frac.') : '';
+        @endphp
+        const egressIsFraction = {{ $egressIsFrac }};
+        const egressFracQty    = {{ $egressFracQty }};
+        const egressUnitName   = '{{ $egressUnit }}';
+        const egressFracName   = '{{ $egressFrac }}';
+        const egressBaseUrl    = '{{ url("admin/items/".$item->id."/stock") }}';
+
+        // Stock actual del lote seleccionado
+        let egressLotData = { fullUnits: 0, extraFracs: 0, totalFracs: 0, stock: 0 };
+
+        // Clic en botón de egreso de cualquier fila (delegación — la lista es AJAX)
+        $(document).on('click', '.btn-egress-lot', function () {
+            const btn = $(this);
+            egressLotData = {
+                fullUnits  : parseInt(btn.data('full-units'))  || 0,
+                extraFracs : parseInt(btn.data('extra-fracs')) || 0,
+                totalFracs : parseInt(btn.data('total-fracs')) || 0,
+                stock      : parseInt(btn.data('stock'))       || 0,
+            };
+
+            // Rellenar info del lote en el modal
+            const lote = btn.data('lote') || 'Sin lote';
+            $('#egress-lote-name').text(lote);
+
+            let availText;
+            if (egressIsFraction) {
+                if (egressLotData.fullUnits > 0 && egressLotData.extraFracs > 0)
+                    availText = `${egressLotData.fullUnits} ${egressUnitName} + ${egressLotData.extraFracs} ${egressFracName}`;
+                else if (egressLotData.fullUnits > 0)
+                    availText = `${egressLotData.fullUnits} ${egressUnitName}`;
+                else
+                    availText = `${egressLotData.extraFracs} ${egressFracName}`;
+            } else {
+                availText = `${egressLotData.stock} ${egressUnitName}`;
+            }
+            $('#egress-available-text').text(availText);
+
+            // Actualizar action del form
+            const stockId = btn.data('stock-id');
+            $('#form-egress-stock').attr('action', `${egressBaseUrl}/${stockId}/egress`);
+
+            // Reset campos
+            $('#egress-quantity').val(0);
+            if (egressIsFraction) $('#egress-extra-fractions').val(0);
+            $('#egress-reason').val('');
+            $('#egress-confirm').prop('checked', false);
+            $('#egress-summary-text').text('—');
+            $('#egress-submit-btn').prop('disabled', true);
+
+            $('#modal-egress-stock').modal('show');
+        });
+
+        function updateEgressSummary() {
+            if (egressIsFraction) {
+                const units = parseInt($('#egress-quantity').val()) || 0;
+                const fracs = parseInt($('#egress-extra-fractions').val()) || 0;
+                const total = (units * egressFracQty) + fracs;
+
+                if (total <= 0) { $('#egress-summary-text').text('—'); checkEgressReady(); return; }
+
+                if (total > egressLotData.totalFracs) {
+                    $('#egress-summary-text').html(`<span style="color:#e74c3c;">⚠ Supera el disponible (${egressLotData.totalFracs} ${egressFracName})</span>`);
+                    checkEgressReady(); return;
+                }
+
+                const fullU = Math.floor(total / egressFracQty);
+                const remF  = total % egressFracQty;
+                let text = '';
+                if (fullU > 0 && remF > 0) text = `${fullU} ${egressUnitName} + ${remF} ${egressFracName}`;
+                else if (fullU > 0)         text = `${fullU} ${egressUnitName}`;
+                else                        text = `${remF} ${egressFracName}`;
+                $('#egress-summary-text').text(text);
+            } else {
+                const qty = parseInt($('#egress-quantity').val()) || 0;
+                if (qty <= 0) { $('#egress-summary-text').text('—'); checkEgressReady(); return; }
+
+                if (qty > egressLotData.stock) {
+                    $('#egress-summary-text').html(`<span style="color:#e74c3c;">⚠ Supera el disponible (${egressLotData.stock} ${egressUnitName})</span>`);
+                    checkEgressReady(); return;
+                }
+                $('#egress-summary-text').text(`${qty} ${egressUnitName}`);
+            }
+            checkEgressReady();
+        }
+
+        function checkEgressReady() {
+            const hasReason  = $('#egress-reason').val().trim().length > 0;
+            const hasConfirm = $('#egress-confirm').is(':checked');
+            const noError    = $('#egress-summary-text span').length === 0 && $('#egress-summary-text').text() !== '—';
+            $('#egress-submit-btn').prop('disabled', !(hasReason && hasConfirm && noError));
+        }
+
+        $('#egress-reason, #egress-confirm').on('change keyup', checkEgressReady);
+
+        // Reset al cerrar modal
+        $('#modal-egress-stock').on('hidden.bs.modal', function () {
+            $('#egress-quantity').val(0);
+            if (egressIsFraction) $('#egress-extra-fractions').val(0);
+            $('#egress-reason').val('');
+            $('#egress-confirm').prop('checked', false);
+            $('#egress-summary-text').text('—');
+            $('#egress-submit-btn').prop('disabled', true);
+        });
+
+        // Bloquear doble submit
+        $('#form-egress-stock').submit(function () {
+            $('#egress-submit-btn').prop('disabled', true)
+                .html('<i class="fa-solid fa-spinner fa-spin"></i> Procesando...');
+        });
     </script>
 @stop
