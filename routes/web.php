@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\EgresController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\MicroServiceController;
 use App\Http\Controllers\RoleController;
@@ -83,8 +84,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['loggin', 'system']], functi
     Route::get('items/{id}/stock/ajax/list', [ItemController::class, 'listStock']);
     Route::get('items/{id}/sales/ajax/list', [ItemController::class, 'listSales']);
     Route::post('items/{id}/stock', [ItemController::class, 'storeStock'])->name('items-stock.store');
-    Route::post('items/{id}/stock/{stockId}/egress', [ItemController::class, 'egressStock'])->name('items-stock.egress');
-    Route::delete('items/{id}/stock/{stockId}/egress/{egressId}', [ItemController::class, 'deleteEgress'])->name('items-stock.egress.destroy');
+    Route::post('items/{id}/stock/{stockId}/egress', [EgresController::class, 'store'])->name('items-stock.egress');
+    Route::delete('items/{id}/stock/{stockId}/egress/{egressId}', [EgresController::class, 'destroy'])->name('items-stock.egress.destroy');
     Route::delete('items/{id}/stock/{stock}', [ItemController::class, 'destroyStock'])->name('items-stock.destroy');
     Route::patch('items/{id}/minimum', [ItemController::class, 'updateMinimum'])->name('items.update.minimum');
 

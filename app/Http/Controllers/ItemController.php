@@ -11,8 +11,6 @@ use App\Models\IncomeDetail;
 use App\Models\ItemStock;
 use App\Models\SaleDetail;
 use App\Models\ItemStockFraction;
-use App\Models\EgresDetail;
-use App\Models\Egres;
 use Carbon\Carbon;
 use PhpParser\Node\Stmt\Return_;
 
