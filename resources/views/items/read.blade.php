@@ -548,7 +548,7 @@
     <script src="{{ asset('js/input-numberBlock.js') }}"></script>
     <script src="{{ url('js/main.js') }}"></script>
     <script>
-        var countPage = 10, timeout = null;
+        var countPageStock = 10, countPageSales = 10, timeout = null;
 
         $(document).ready(() => {
             list();
@@ -559,8 +559,8 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(() => list(), 800);
             });
-            $('#select-paginate-stock').change(function () { countPage = $(this).val(); list(); });
-            $('#select-paginate-direct-sales').change(function () { countPage = $(this).val(); listSales(); });
+            $('#select-paginate-stock').change(function () { countPageStock = $(this).val(); list(); });
+            $('#select-paginate-direct-sales').change(function () { countPageSales = $(this).val(); listSales(); });
 
             $('#expirationDate').on('change', function () {
                 let date = $(this).val();
@@ -612,7 +612,7 @@
             let search = $('#input-search-stock').val() || '';
             let status = $('#status-stock').val();
             $.ajax({
-                url: `${url}?search=${search}&paginate=${countPage}&page=${page}&status=${status}`,
+                url: `${url}?search=${search}&paginate=${countPageStock}&page=${page}&status=${status}`,
                 type: 'get',
                 success: function (result) {
                     $('#div-results').html(result);
@@ -656,7 +656,7 @@
             $('#div-results-direct-sales').loading({ message: 'Cargando...' });
             let url = '{{ url("admin/items/".$item->id."/sales/ajax/list") }}';
             $.ajax({
-                url: `${url}?paginate=${countPage}&page=${page}`,
+                url: `${url}?paginate=${countPageSales}&page=${page}`,
                 type: 'get',
                 success: function (result) {
                     $('#div-results-direct-sales').html(result);
