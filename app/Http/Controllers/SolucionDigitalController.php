@@ -9,9 +9,20 @@ use DateTime;
 
 class SolucionDigitalController extends Controller
 {
-    public function settings_code() 
+    public function settings_code()
     {
-        return DB::connection('solucionDigital')->table('web_systems')->where('code', setting('system.code-system'))->first();
+        if (session()->has('solucion_digital_data')) {
+            return session('solucion_digital_data');
+        }
+
+        $data = DB::connection('solucionDigital')
+            ->table('web_systems')
+            ->where('code', setting('system.code-system'))
+            ->first();
+
+        session(['solucion_digital_data' => $data]);
+
+        return $data;
     }
 
     public function payment_alert()
